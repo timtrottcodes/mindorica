@@ -1,1 +1,20 @@
-<p>import works!</p>
+<div class="container py-4">
+  <h2 class="mb-4">Import Anki Deck (.apkg)</h2>
+
+  <form>
+    <div class="mb-3">
+      <label for="deckFile" class="form-label">Select .apkg File</label>
+      <input type="file" class="form-control" id="deckFile" accept=".apkg" />
+    </div>
+
+    <div class="mb-3">
+      <label for="topicSelect" class="form-label">Assign to Topic</label>
+      <select class="form-select" id="topicSelect">
+        <option disabled selected>Select topic</option>
+        <!-- Will be populated dynamically -->
+      </select>
+    </div>
+
+    <button class="btn btn-primary" disabled>Import (coming soon)</button>
+  </form>
+</div>

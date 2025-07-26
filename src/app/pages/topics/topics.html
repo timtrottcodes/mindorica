@@ -1,1 +1,24 @@
-<p>topics works!</p>
+<div class="container py-4">
+  <h2 class="mb-4">Topics</h2>
+
+  <form (ngSubmit)="addTopic()" class="d-flex mb-4 gap-2">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="New topic name"
+      [(ngModel)]="newTopicName"
+      name="topicName"
+    />
+    <button type="submit" class="btn btn-success">Add Topic</button>
+  </form>
+
+  <ul class="list-group">
+    <li
+      *ngFor="let topic of topics"
+      class="list-group-item d-flex justify-content-between align-items-center"
+    >
+      {{ topic.name }}
+      <span class="badge bg-secondary">{{ topic.cards.length }} cards</span>
+    </li>
+  </ul>
+</div>
