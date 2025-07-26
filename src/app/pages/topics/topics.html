@@ -1,24 +1,21 @@
-<div class="container py-4">
-  <h2 class="mb-4">Topics</h2>
-
-  <form (ngSubmit)="addTopic()" class="d-flex mb-4 gap-2">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="New topic name"
-      [(ngModel)]="newTopicName"
-      name="topicName"
-    />
-    <button type="submit" class="btn btn-success">Add Topic</button>
-  </form>
-
-  <ul class="list-group">
-    <li
-      *ngFor="let topic of topics"
-      class="list-group-item d-flex justify-content-between align-items-center"
-    >
-      {{ topic.name }}
-      <span class="badge bg-secondary">{{ topic.cards.length }} cards</span>
-    </li>
-  </ul>
-</div>
+<div class="container mt-4">
+    <h2>Topics</h2>
+    <form (submit)="addTopic(); $event.preventDefault();" class="mb-3">
+      <input class="form-control" [(ngModel)]="newTopic" name="topic" placeholder="e.g. Bulgarian/Places" required>
+      <button class="btn btn-primary mt-2" type="submit">Add Topic</button>
+    </form>
+  
+    <ul>
+        <ng-container *ngFor="let topic of getRootTopics()">
+          <li>
+            <a [routerLink]="['/flashcards', topic.id]">{{ topic.id }}</a>
+            <ul>
+              <ng-container *ngFor="let sub of getSubtopics(topic.id)">
+                <li><a [routerLink]="['/flashcards', sub.id]">{{ sub.id }}</a></li>
+              </ng-container>
+            </ul>
+          </li>
+        </ng-container>
+      </ul>
+      
+  </div>

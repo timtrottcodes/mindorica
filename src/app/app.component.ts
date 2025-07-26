@@ -1,11 +1,20 @@
 // src/app/app.component.ts
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { RouterOutlet, RouterLink, Routes, RouterModule } from '@angular/router';
+import { Flashcards } from './pages/flashcards/flashcards';
+import { Home } from './pages/home/home';
+import { Topics } from './pages/topics/topics';
+
+const routes: Routes = [
+  { path: '', component: Home },
+  { path: 'topics', component: Topics },
+  { path: 'flashcards/:topicId', component: Flashcards },
+];
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, RouterModule],
   template: `
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
