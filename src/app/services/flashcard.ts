@@ -91,4 +91,9 @@ export class FlashcardService {
     collect(topicId);
     return Array.from(descendants);
   }
+
+  getFlashcardsForTopic(topicId: string): Flashcard[] {
+    const relevantTopics = this.getDescendantTopicIds(topicId);
+    return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
+  }  
 }

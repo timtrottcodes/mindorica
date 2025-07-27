@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FlashcardService } from '../../services/flashcard';
-import { Flashcard } from '../../models/flashcard';
+import { Flashcard, Topic } from '../../models/flashcard';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Modal } from 'bootstrap';
@@ -20,6 +20,8 @@ export class FlashcardManager {
   topicName = '';
   cardToDelete: Flashcard | null = null;
   deleteModal!: Modal;
+  allTopics: Topic[] = [];
+  groupedFlashcards: { [topicId: string]: Flashcard[] } = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -27,14 +29,25 @@ export class FlashcardManager {
   ) {}
 
   ngOnInit(): void {
-    this.topicId = this.route.snapshot.paramMap.get('topicId') || '';
-    this.loadFlashcards();
-    this.loadTopicName();
+    this.route.paramMap.subscribe(params => {
+      this.topicId = params.get('topicId') || '';
+      this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
+      this.allTopics = this.flashcardService.getTopics(); // Load all topics
+    });
 
-    const modalEl = document.getElementById('deleteConfirmModal');
-    if (modalEl) {
-      this.deleteModal = new Modal(modalEl);
-    }
+    this.groupedFlashcards = this.flashcards.reduce((groups, card) => {
+      if (!groups[card.topicId]) {
+        groups[card.topicId] = [];
+      }
+      groups[card.topicId].push(card);
+      return groups;
+    }, {} as { [topicId: string]: Flashcard[] });
+
+    this.loadTopicName();
+  }
+
+  getTopicIds(grouped: { [topicId: string]: Flashcard[] }): string[] {
+    return Object.keys(grouped).sort();
   }
 
   loadTopicName() {
@@ -69,11 +82,18 @@ export class FlashcardManager {
     this.editCard = this.blankCard();
   }
 
+  moveCard(card: Flashcard) {
+    this.flashcardService.updateFlashcard(card);
+  
+    if (card.topicId !== this.topicId) {
+      this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
+    }
+  }
+
   requestDelete(card: Flashcard): void {
     this.cardToDelete = card;
     this.deleteModal.show();
   }
-
 
   confirmDelete(): void {
     if (this.cardToDelete) {
