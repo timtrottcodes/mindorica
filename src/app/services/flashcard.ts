@@ -26,6 +26,7 @@ export class FlashcardService {
     localStorage.setItem(this.cardsKey, JSON.stringify(this.flashcards));
   }
 
+  // Topics
   getTopics(): Topic[] {
     return [...this.topics];
   }
@@ -41,11 +42,44 @@ export class FlashcardService {
     this.save();
   }
 
-  getFlashcardsForTopic(topicId: string): Flashcard[] {
-    const relevantTopics = this.getDescendantTopicIds(topicId);
-    return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
+  // Flashcards
+  getFlashcards(topicId?: string): Flashcard[] {
+    if (topicId) {
+      const relevantTopics = this.getDescendantTopicIds(topicId);
+      return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
+    }
+    return [...this.flashcards];
   }
 
+  addFlashcard(card: Partial<Flashcard>) {
+    if (!card.front || !card.back || !card.topicId) return;
+
+    const newCard: Flashcard = {
+      id: uuidv4(),
+      front: card.front,
+      back: card.back,
+      topicId: card.topicId,
+      flipped: card.flipped ?? false
+    };
+
+    this.flashcards.push(newCard);
+    this.save();
+  }
+
+  updateFlashcard(updatedCard: Flashcard) {
+    const index = this.flashcards.findIndex(c => c.id === updatedCard.id);
+    if (index !== -1) {
+      this.flashcards[index] = updatedCard;
+      this.save();
+    }
+  }
+
+  deleteFlashcard(id: string) {
+    this.flashcards = this.flashcards.filter(card => card.id !== id);
+    this.save();
+  }
+
+  // Recursive topic helper
   private getDescendantTopicIds(topicId: string): string[] {
     const descendants = new Set<string>();
 
@@ -56,21 +90,5 @@ export class FlashcardService {
 
     collect(topicId);
     return Array.from(descendants);
-  }
-
-  addFlashcard(front: string, back: string, topicId: string, flipped: boolean = false) {
-    const card: Flashcard = {
-      id: uuidv4(),
-      front,
-      back,
-      topicId,
-      flipped
-    };
-    this.flashcards.push(card);
-    this.save();
-  }
-
-  getFlashcards(): Flashcard[] {
-    return [...this.flashcards];
   }
 }

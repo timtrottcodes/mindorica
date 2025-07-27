@@ -1,15 +1,7 @@
 // src/app/app.component.ts
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink, Routes, RouterModule } from '@angular/router';
-import { Flashcards } from './pages/flashcards/flashcards';
-import { Home } from './pages/home/home';
-import { Topics } from './pages/topics/topics';
-
-const routes: Routes = [
-  { path: '', component: Home },
-  { path: 'topics', component: Topics },
-  { path: 'flashcards/:topicId', component: Flashcards },
-];
+import { AppRoutes } from "../app/app-routing"
 
 @Component({
   selector: 'app-root',
@@ -18,7 +10,7 @@ const routes: Routes = [
   template: `
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" routerLink="/">Ankular</a>
+        <a class="navbar-brand" [routerLink]="[AppRoutes.Home]">Ankular</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -34,13 +26,13 @@ const routes: Routes = [
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" routerLink="/">Home</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.Home]">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/topics">Topics</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.TopicManager]">Topics</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" routerLink="/import">Import</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.Import]">Import</a>
             </li>
           </ul>
         </div>
@@ -52,4 +44,6 @@ const routes: Routes = [
     </div>
   `,
 })
-export class AppComponent {}
+export class AppComponent {
+  AppRoutes = AppRoutes;
+}

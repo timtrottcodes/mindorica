@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { Flashcards } from './pages/flashcards/flashcards';
+import { FlashcardManager } from './pages/flashcard-manager/flashcard-manager';
 
 export const routes: Routes = [
-    { path: 'flashcards/:topicId', component: Flashcards },
+    { path: 'flashcards/:topicId', component: FlashcardManager },
 ];

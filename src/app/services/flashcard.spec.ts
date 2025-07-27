@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Flashcard } from './flashcard';
+import { FlashcardService } from './flashcard';
 
 describe('Flashcard', () => {
-  let service: Flashcard;
+  let service: FlashcardService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Flashcard);
+    service = TestBed.inject(FlashcardService);
   });
 
   it('should be created', () => {
