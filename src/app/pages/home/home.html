@@ -1,8 +1,37 @@
-<div class="container py-5 text-center">
-  <h1 class="display-4">Welcome to Ankular 🎓</h1>
-  <p class="lead">
-    Your personal flashcard trainer. Import Anki decks, organize by topic, and
-    study at your pace.
-  </p>
-  <a [routerLink]="[AppRoutes.StudyViewer]" class="btn btn-primary btn-lg mt-4">Get Started</a>
-</div>
+<header class="text-white text-center py-5" style="background: linear-gradient(135deg, #6a82fb, #fc5c7d); overflow: hidden;">
+  <div class="container">
+    <h1 class="display-4 fw-bold mb-3">Mindorica</h1>
+    <p class="lead mb-4">Your Mind, Mastered. Organize thought. Remember everything.</p>
+    <a [routerLink]="[AppRoutes.StudyViewer]" class="btn btn-primary btn-lg rounded-pill px-5">Get Started</a>
+  </div>
+</header>
+
+<section id="features" class="container py-5" style="max-width: 900px;">
+  <h2 class="fw-bold text-center mb-5">What is Mindorica?</h2>
+
+  <div class="mb-4">
+    <h3 class="fw-semibold mb-2">Personal Learning Companion</h3>
+    <p>
+      Mindorica helps you capture, organize, and master what matters most.
+      Build long-term memory, track your journey, and take control of your
+      knowledge — one idea at a time.
+    </p>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="fw-semibold mb-2">Organize the Way Your Mind Works</h3>
+    <p>
+      Create and organize flashcards by topic with support for text, images,
+      and more. Structure your learning naturally, hierarchically, and fluidly.
+    </p>
+  </div>
+
+  <div>
+    <h3 class="fw-semibold mb-2">Stay Focused and Reflect</h3>
+    <p>
+      Enjoy a clean, distraction-free interface with powerful tools to help you
+      review at your own pace. Mindorica is a mental habitat — a place to
+      reflect, retain, and revisit what matters.
+    </p>
+  </div>
+</section>

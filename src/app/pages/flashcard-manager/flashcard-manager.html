@@ -1,6 +1,21 @@
 <div class="container mt-4">
   <h2>Flashcards for "{{ topicName }}"</h2>
 
+  <div class="mb-4">
+    <p>
+      Here you can create, edit, and organize your flashcards within the selected topic.
+      Each flashcard has a <em>front</em> (the question or prompt) and a <em>back</em> (the answer or explanation).
+    </p>
+    <p>
+      To add a new flashcard, use the <strong>Add Flashcard</strong> button and fill in the fields.
+      You can also edit existing cards or move them between topics using the dropdown menu.
+    </p>
+    <p>
+      Keep your flashcards organized by assigning them to the appropriate topics and subtopics.
+      This will make studying more effective and focused.
+    </p>
+  </div>
+
   <div class="row my-4">
     <div class="col-md-6">
       <form (submit)="saveFlashcard(); $event.preventDefault()" class="mt-4">

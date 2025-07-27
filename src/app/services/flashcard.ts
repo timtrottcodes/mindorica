@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({ providedIn: 'root' })
 export class FlashcardService {
-  private topicsKey = 'ankular_topics';
-  private cardsKey = 'ankular_flashcards';
+  private topicsKey = 'mindorica_topics';
+  private cardsKey = 'mindorica_flashcards';
 
   private topics: Topic[] = [];
   private flashcards: Flashcard[] = [];

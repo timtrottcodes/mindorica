@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ankular": {
+    "mindorica": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -64,10 +64,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ankular:build:production"
+              "buildTarget": "mindorica:build:production"
             },
             "development": {
-              "buildTarget": "ankular:build:development"
+              "buildTarget": "mindorica:build:development"
             }
           },
           "defaultConfiguration": "development"

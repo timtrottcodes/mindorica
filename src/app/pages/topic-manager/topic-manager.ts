@@ -17,9 +17,19 @@ import { RouterModule } from '@angular/router';
 export class TopicManager {
   topics: Topic[] = [];
   newTopic: string = '';
+  placeholderTopic: string = '';
 
   constructor(private flashcardService: FlashcardService) {
     this.loadTopics();
+  }
+
+  ngOnInit() {
+    this.setRandomPlaceholder();
+  }
+
+  setRandomPlaceholder() {
+    const index = Math.floor(Math.random() * this.sampleTopics.length);
+    this.placeholderTopic = this.sampleTopics[index];
   }
 
   loadTopics() {
@@ -42,4 +52,59 @@ export class TopicManager {
   getRootTopics(): Topic[] {
     return this.topics.filter(t => !t.parent);
   }
+
+  private sampleTopics: string[] = [
+    'Spanish/Grammar',
+    'Physics/Quantum Mechanics',
+    'Football/Rules',
+    'WorldHistory/Renaissance',
+    'Law/Contract Law',
+    'Mathematics/Algebra',
+    'Chemistry/Organic',
+    'Basketball/Dribbling',
+    'Philosophy/Ethics',
+    'Biology/Genetics',
+    'Programming/JavaScript',
+    'Geography/Capitals',
+    'French/Verbs',
+    'Psychology/Cognitive',
+    'Music/Theory',
+    'Art/Impressionism',
+    'Economics/Macro',
+    'Medicine/Anatomy',
+    'Sociology/Culture',
+    'Astronomy/Stars',
+    'English/Vocabulary',
+    'History/WWII',
+    'Law/Criminal',
+    'Spanish/Verbs',
+    'Physics/Thermodynamics',
+    'Sports/Tennis',
+    'Philosophy/Logic',
+    'Biology/Ecology',
+    'Programming/Python',
+    'Geography/Landforms',
+    'French/Vocabulary',
+    'Psychology/Behavior',
+    'Music/Instruments',
+    'Art/Modern',
+    'Economics/Micro',
+    'Medicine/Pharmacology',
+    'Sociology/Groups',
+    'Astronomy/Planets',
+    'English/Grammar',
+    'History/Ancient Egypt',
+    'Law/International',
+    'Spanish/Pronunciation',
+    'Physics/Relativity',
+    'Sports/Baseball',
+    'Philosophy/Metaphysics',
+    'Biology/Cell Biology',
+    'Programming/Java',
+    'Geography/Maps',
+    'French/Conversation',
+    'Psychology/Memory',
+    'Music/Composition',
+    'Art/Sculpture'
+  ];
 }
