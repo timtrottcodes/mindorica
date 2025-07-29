@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" [routerLink]="[AppRoutes.Home]">Mindorica</a>
+        
         <button
           class="navbar-toggler"
           type="button"
@@ -37,6 +38,11 @@ import { CommonModule } from '@angular/common';
               <a class="nav-link" [routerLink]="[AppRoutes.Import]">Import</a>
             </li>
           </ul>
+
+          <div class="form-check form-switch text-light ms-3">
+            <input class="form-check-input" type="checkbox" id="darkModeToggle" (change)="toggleDarkMode()" [checked]="darkModeEnabled">
+            <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+          </div>
         </div>
       </div>
     </nav>
@@ -61,14 +67,42 @@ import { CommonModule } from '@angular/common';
 export class AppComponent {
   AppRoutes = AppRoutes;
   isHomePage = false;
+  darkModeEnabled = false;
 
   constructor(private router: Router) {
-    // Listen to route changes
+    // Route-based home flag
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        // Set flag true if URL is '/' (home), adjust if your home route is different
         this.isHomePage = event.urlAfterRedirects === '/' || event.urlAfterRedirects === '/home';
       });
+
+    // Load theme preference
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark') {
+      this.enableDarkMode();
+    }
+  }
+
+  toggleDarkMode(): void {
+    this.darkModeEnabled = !this.darkModeEnabled;
+    if (this.darkModeEnabled) {
+      this.enableDarkMode();
+    } else {
+      this.disableDarkMode();
+    }
+  }
+
+  enableDarkMode(): void {
+    document.body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+    this.darkModeEnabled = true;
+  }
+
+  disableDarkMode(): void {
+    document.body.classList.remove('dark-theme');
+    localStorage.setItem('theme', 'light');
+    this.darkModeEnabled = false;
   }
 }
+
