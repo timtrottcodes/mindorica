@@ -1,0 +1,69 @@
+h2 {
+  font-size: 2rem;
+  animation: fadeInDown 1s ease;
+}
+
+.progress-container {
+  position: relative;
+  height: 20px;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #3498db;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  color: #333;
+  line-height: 20px;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.feedback {
+  margin-top: 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.summary {
+  margin-top: 2rem;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.summary-table th,
+.summary-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+ul.list-group li {
+  font-size: 1rem;
+}

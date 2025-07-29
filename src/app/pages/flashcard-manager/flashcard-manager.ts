@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FlashcardService } from '../../services/flashcard';
-import { Flashcard, Topic } from '../../models/flashcard';
+import { FlashcardModel, TopicModel } from '../../models/flashcard';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Modal } from 'bootstrap';
@@ -15,13 +15,13 @@ import { Modal } from 'bootstrap';
 })
 export class FlashcardManager {
   topicId!: string;
-  flashcards: Flashcard[] = [];
-  editCard: Flashcard = this.blankCard();
+  flashcards: FlashcardModel[] = [];
+  editCard: FlashcardModel = this.blankCard();
   topicName = '';
-  cardToDelete: Flashcard | null = null;
+  cardToDelete: FlashcardModel | null = null;
   deleteModal!: Modal;
-  allTopics: Topic[] = [];
-  groupedFlashcards: { [topicId: string]: Flashcard[] } = {};
+  allTopics: TopicModel[] = [];
+  groupedFlashcards: { [topicId: string]: FlashcardModel[] } = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -33,20 +33,14 @@ export class FlashcardManager {
       this.topicId = params.get('topicId') || '';
       this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
       this.allTopics = this.flashcardService.getTopics(); // Load all topics
+      this.editCard = this.blankCard();
     });
 
-    this.groupedFlashcards = this.flashcards.reduce((groups, card) => {
-      if (!groups[card.topicId]) {
-        groups[card.topicId] = [];
-      }
-      groups[card.topicId].push(card);
-      return groups;
-    }, {} as { [topicId: string]: Flashcard[] });
-
+    this.loadGroupedFlashcards();
     this.loadTopicName();
   }
 
-  getTopicIds(grouped: { [topicId: string]: Flashcard[] }): string[] {
+  getTopicIds(grouped: { [topicId: string]: FlashcardModel[] }): string[] {
     return Object.keys(grouped).sort();
   }
 
@@ -56,12 +50,23 @@ export class FlashcardManager {
   }
 
 
-  blankCard(): Flashcard {
+  blankCard(): FlashcardModel {
     return { id: '', topicId: this.topicId, front: '', back: '', flipped: false };
   }
 
   loadFlashcards() {
     this.flashcards = this.flashcardService.getFlashcards(this.topicId);
+    this.loadGroupedFlashcards();
+  }
+
+  loadGroupedFlashcards() {
+    this.groupedFlashcards = this.flashcards.reduce((groups, card) => {
+      if (!groups[card.topicId]) {
+        groups[card.topicId] = [];
+      }
+      groups[card.topicId].push(card);
+      return groups;
+    }, {} as { [topicId: string]: FlashcardModel[] });
   }
 
   saveFlashcard() {
@@ -74,7 +79,7 @@ export class FlashcardManager {
     this.loadFlashcards();
   }
 
-  startEdit(card: Flashcard) {
+  startEdit(card: FlashcardModel) {
     this.editCard = { ...card };
   }
 
@@ -82,7 +87,7 @@ export class FlashcardManager {
     this.editCard = this.blankCard();
   }
 
-  moveCard(card: Flashcard) {
+  moveCard(card: FlashcardModel) {
     this.flashcardService.updateFlashcard(card);
   
     if (card.topicId !== this.topicId) {
@@ -90,7 +95,7 @@ export class FlashcardManager {
     }
   }
 
-  requestDelete(card: Flashcard): void {
+  requestDelete(card: FlashcardModel): void {
     this.cardToDelete = card;
     this.deleteModal.show();
   }

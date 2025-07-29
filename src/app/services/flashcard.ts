@@ -1,7 +1,7 @@
 // src/app/services/flashcard.service.ts
 
 import { Injectable } from '@angular/core';
-import { Flashcard, Topic } from '../models/flashcard';
+import { FlashcardModel, TopicModel } from '../models/flashcard';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable({ providedIn: 'root' })
@@ -9,8 +9,8 @@ export class FlashcardService {
   private topicsKey = 'mindorica_topics';
   private cardsKey = 'mindorica_flashcards';
 
-  private topics: Topic[] = [];
-  private flashcards: Flashcard[] = [];
+  private topics: TopicModel[] = [];
+  private flashcards: FlashcardModel[] = [];
 
   constructor() {
     this.load();
@@ -27,23 +27,36 @@ export class FlashcardService {
   }
 
   // Topics
-  getTopics(): Topic[] {
+  getTopics(): TopicModel[] {
     return [...this.topics];
   }
 
   addTopic(fullId: string) {
+    // Don't add if it already exists
     if (this.topics.find(t => t.id === fullId)) return;
 
     const parts = fullId.split('/');
     const name = parts[parts.length - 1];
-    const parent = parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
+    const parentId = parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
 
-    this.topics.push({ id: fullId, name, parent });
+    // Recursively add parent first if needed
+    if (parentId && !this.topics.find(t => t.id === parentId)) {
+      this.addTopic(parentId);
+    }
+
+    // Add the current topic
+    this.topics.push({
+      id: fullId,
+      name,
+      parent: parentId,
+    });
+
     this.save();
   }
 
+
   // Flashcards
-  getFlashcards(topicId?: string): Flashcard[] {
+  getFlashcards(topicId?: string): FlashcardModel[] {
     if (topicId) {
       const relevantTopics = this.getDescendantTopicIds(topicId);
       return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
@@ -51,10 +64,10 @@ export class FlashcardService {
     return [...this.flashcards];
   }
 
-  addFlashcard(card: Partial<Flashcard>) {
+  addFlashcard(card: Partial<FlashcardModel>) {
     if (!card.front || !card.back || !card.topicId) return;
 
-    const newCard: Flashcard = {
+    const newCard: FlashcardModel = {
       id: uuidv4(),
       front: card.front,
       back: card.back,
@@ -66,7 +79,7 @@ export class FlashcardService {
     this.save();
   }
 
-  updateFlashcard(updatedCard: Flashcard) {
+  updateFlashcard(updatedCard: FlashcardModel) {
     const index = this.flashcards.findIndex(c => c.id === updatedCard.id);
     if (index !== -1) {
       this.flashcards[index] = updatedCard;
@@ -92,7 +105,7 @@ export class FlashcardService {
     return Array.from(descendants);
   }
 
-  getFlashcardsForTopic(topicId: string): Flashcard[] {
+  getFlashcardsForTopic(topicId: string): FlashcardModel[] {
     const relevantTopics = this.getDescendantTopicIds(topicId);
     return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
   }  

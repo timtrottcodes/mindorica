@@ -1,11 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { FlashcardModel } from '../../models/flashcard';
 
 @Component({
   selector: 'app-flashcard',
-  imports: [],
   templateUrl: './flashcard.html',
-  styleUrl: './flashcard.scss'
+  styleUrls: ['./flashcard.css']
 })
-export class Flashcard {
+export class FlashcardComponent {
+  @Input() card!: FlashcardModel;
+  @Input() showBack = false;
+  @Output() flip = new EventEmitter<void>();
 
+  onFlip(): void {
+    this.flip.emit();
+  }
 }

@@ -1,0 +1,17 @@
+.topic-pill {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.topic-pill:nth-child(1) { animation-delay: 0.05s; }
+.topic-pill:nth-child(2) { animation-delay: 0.1s; }
+.topic-pill:nth-child(3) { animation-delay: 0.15s; }
+/* ... repeat or use a loop in SCSS if needed ... */
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

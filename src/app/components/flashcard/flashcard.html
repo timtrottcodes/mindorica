@@ -1,1 +1,6 @@
-<p>flashcard works!</p>
+<div class="flashcard" [class.flipped]="showBack" (click)="onFlip()">
+  <div class="inner">
+    <div class="front">{{ card.front }}</div>
+    <div class="back">{{ card.back }}</div>
+  </div>
+</div>

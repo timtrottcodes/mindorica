@@ -1,11 +1,7 @@
 <div class="container mt-4">
   <h2>Topics</h2>
 
-  <div *ngIf="topics.length === 0" class="alert alert-info mt-3">
-    No topics created yet. Get started by creating a new topic or import some!
-  </div>
-
-  <div *ngIf="topics.length > 0" class="mb-4">
+  <div class="mb-4">
     <p>
       Topics help you organize your flashcards by subjects or categories. You can create
       broad topics like <em>“Bulgarian Language”</em> and add subtopics such as
@@ -20,6 +16,11 @@
       This helps keep your study materials organized and easy to navigate.
     </p>
   </div>
+
+  <div *ngIf="topics.length === 0" class="alert alert-info mt-3">
+    No topics created yet. Get started by creating a new topic or import some!
+  </div>
+
 
   <div class="mx-auto" style="max-width: 400px">
     <form

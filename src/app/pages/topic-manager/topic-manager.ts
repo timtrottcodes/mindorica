@@ -2,7 +2,7 @@
 
 import { Component } from '@angular/core';
 import { FlashcardService } from '../../services/flashcard';
-import { Topic } from '../../models/flashcard';
+import { TopicModel } from '../../models/flashcard';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -15,7 +15,7 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class TopicManager {
-  topics: Topic[] = [];
+  topics: TopicModel[] = [];
   newTopic: string = '';
   placeholderTopic: string = '';
 
@@ -45,11 +45,11 @@ export class TopicManager {
     this.loadTopics();
   }
 
-  getSubtopics(parentId: string): Topic[] {
+  getSubtopics(parentId: string): TopicModel[] {
     return this.topics.filter(t => t.parent === parentId);
   }
 
-  getRootTopics(): Topic[] {
+  getRootTopics(): TopicModel[] {
     return this.topics.filter(t => !t.parent);
   }
 
