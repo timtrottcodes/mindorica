@@ -68,11 +68,15 @@ export class FlashcardService {
     if (!card.front || !card.back || !card.topicId) return;
 
     const newCard: FlashcardModel = {
-      id: uuidv4(),
+      id: card.id || uuidv4(),
       front: card.front,
       back: card.back,
       topicId: card.topicId,
-      flipped: card.flipped ?? false
+      flipped: card.flipped ?? false,
+      imageUrl: card.imageUrl || undefined,
+      audioUrl: card.audioUrl || undefined,
+      notes: card.notes || undefined,
+      nextReviewDate: card.nextReviewDate || undefined
     };
 
     this.flashcards.push(newCard);
@@ -82,7 +86,10 @@ export class FlashcardService {
   updateFlashcard(updatedCard: FlashcardModel) {
     const index = this.flashcards.findIndex(c => c.id === updatedCard.id);
     if (index !== -1) {
-      this.flashcards[index] = updatedCard;
+      this.flashcards[index] = {
+        ...this.flashcards[index],
+        ...updatedCard
+      };
       this.save();
     }
   }

@@ -1,39 +1,67 @@
 .flashcard {
-  width: 300px;
-  height: 200px;
+  width: 100%;
+  max-width: 400px;
+  margin: 4rem auto;
   perspective: 1000px;
-  margin: auto;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hover lift effect */
+.flashcard:hover {
+  transform: scale(1.02);
+}
+
+/* Inner card styling */
+.flashcard .inner {
+  position: relative;
+  width: 100%;
+  min-height: 250px;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  will-change: transform;  
+}
+
+.flashcard.flipped .inner {
+  transform: rotateY(180deg);
+}
+
+/* Front and back faces */
+.flashcard .front,
+.flashcard .back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden; /* Safari fix */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  background: var(--card-gradient-light);
+  color: #111;
   cursor: pointer;
 }
 
-.inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
+.flashcard .front {
+  z-index: 2;
 }
 
-.flipped .inner {
+.flashcard .back {
   transform: rotateY(180deg);
 }
 
-.front, .back {
-  position: absolute;
-  backface-visibility: hidden;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  padding: 20px;
-  font-size: 1.25rem;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Image and audio */
+.flashcard img,
+.flashcard audio {
+  display: block;
+  margin: 1em auto;    
+  border-radius: 0.5rem;
 }
 
-.back {
-  transform: rotateY(180deg);
+/* Notes section */
+.flashcard .notes {
+  font-size: 0.875rem;
+  color: var(--bs-secondary);
 }

@@ -3,47 +3,172 @@
 
   <div class="mb-4">
     <p>
-      Here you can create, edit, and organize your flashcards within the selected topic.
-      Each flashcard has a <em>front</em> (the question or prompt) and a <em>back</em> (the answer or explanation).
+      Here you can create, edit, and organize your flashcards within the
+      selected topic. Each flashcard has a <em>front</em> (the question or
+      prompt) and a <em>back</em> (the answer or explanation).
     </p>
     <p>
-      To add a new flashcard, use the <strong>Add Flashcard</strong> button and fill in the fields.
-      You can also edit existing cards or move them between topics using the dropdown menu.
+      To add a new flashcard, use the <strong>Add Flashcard</strong> button and
+      fill in the fields. You can also edit existing cards or move them between
+      topics using the dropdown menu.
     </p>
     <p>
-      Keep your flashcards organized by assigning them to the appropriate topics and subtopics.
-      This will make studying more effective and focused.
+      Keep your flashcards organized by assigning them to the appropriate topics
+      and subtopics. This will make studying more effective and focused.
     </p>
   </div>
 
   <div class="row my-4">
-    <div class="col-md-6">
-      <form (submit)="saveFlashcard(); $event.preventDefault()" class="mt-4">
-        <div class="mb-2">
+    <div class="flashcard-form-wrapper">
+      <form
+        (submit)="saveFlashcard(); $event.preventDefault()"
+        class="mt-4 p-3 rounded border shadow-sm"
+      >
+        <!-- Front -->
+        <div class="mb-3">
+          <label class="form-label">Front Text</label>
           <input
             class="form-control"
             [(ngModel)]="editCard.front"
             name="front"
-            placeholder="Front text"
+            placeholder="What appears on the front of the card?"
             required
           />
+          <div class="form-text">E.g., a question, term, or prompt.</div>
         </div>
-        <div class="mb-2">
+
+        <!-- Back -->
+        <div class="mb-3">
+          <label class="form-label">Back Text</label>
           <input
             class="form-control"
             [(ngModel)]="editCard.back"
             name="back"
-            placeholder="Back text"
+            placeholder="What appears on the back of the card?"
             required
           />
+          <div class="form-text">E.g., the answer or explanation.</div>
         </div>
-        <div class="d-flex gap-2">
+
+        <!-- Image Row -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Image (optional)</label>
+            <input
+              class="form-control"
+              type="file"
+              accept="image/*"
+              (change)="onFileChange($event, 'image')"
+            />
+            <div class="form-check form-switch mt-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="imageBack"
+                [(ngModel)]="editCard.imageBack"
+                name="imageBack"
+              />
+              <label class="form-check-label" for="imageBack"
+                >Show image on back</label
+              >
+            </div>
+          </div>
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="text-center w-100 position-relative">
+              <div
+                *ngIf="editCard.imageUrl; else noImage"
+                class="d-inline-block position-relative"
+              >
+                <img
+                  [src]="editCard.imageUrl"
+                  alt="Image preview"
+                  style="max-width: 50px; max-height: 50px"
+                />
+                <button
+                  type="button"
+                  class="btn-close btn-sm position-absolute top-0 start-100 translate-middle"
+                  (click)="clearMedia('image')"
+                  aria-label="Remove image"
+                ></button>
+              </div>
+              <ng-template #noImage>
+                <div class="text-muted">– no image –</div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio Row -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Audio (optional)</label>
+            <input
+              class="form-control"
+              type="file"
+              accept="audio/*"
+              (change)="onFileChange($event, 'audio')"
+            />
+            <div class="form-check form-switch mt-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="audioBack"
+                [(ngModel)]="editCard.audioBack"
+                name="audioBack"
+              />
+              <label class="form-check-label" for="audioBack"
+                >Play audio on back</label
+              >
+            </div>
+          </div>
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="text-center w-100 position-relative">
+              <div
+                *ngIf="editCard.audioUrl; else noAudio"
+                class="d-inline-block position-relative"
+              >
+                <audio
+                  controls
+                  [src]="editCard.audioUrl"
+                  style="max-width: 100%; height: 32px"
+                ></audio>
+                <button
+                  type="button"
+                  class="btn-close btn-sm position-absolute top-0 start-100 translate-middle"
+                  (click)="clearMedia('audio')"
+                  aria-label="Remove audio"
+                ></button>
+              </div>
+              <ng-template #noAudio>
+                <div class="text-muted">– no audio –</div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-3">
+          <label class="form-label">Notes</label>
+          <textarea
+            class="form-control"
+            [(ngModel)]="editCard.notes"
+            name="notes"
+            placeholder="Extra notes or explanations (optional)"
+            rows="3"
+          ></textarea>
+          <div class="form-text">
+            Use this to add hints, mnemonics, or context.
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex gap-2 justify-content-end">
           <button class="btn btn-success" type="submit">
             {{ editCard.id ? "Update" : "Add" }} Flashcard
           </button>
           <button
             *ngIf="editCard.id"
-            class="btn btn-secondary"
+            class="btn btn-outline-secondary"
             type="button"
             (click)="cancelEdit()"
           >
@@ -59,15 +184,43 @@
       <h5 class="border-bottom pb-1">{{ topicId }}</h5>
 
       <ul class="list-group mt-3">
-        <li *ngFor="let card of groupedFlashcards[topicId]" class="list-group-item">
-          <div
-            class="d-flex justify-content-between align-items-start flex-column flex-md-row"
-          >
-            <div class="mb-2 mb-md-0">
-              <strong>{{ card.front }}</strong>
+        <li
+          *ngFor="let card of groupedFlashcards[topicId]"
+          class="list-group-item py-3"
+        >
+          <div class="row gx-3 gy-2 align-items-start">
+            <!-- Front and back text -->
+            <div class="col-12 col-md-5">
+              <div>
+                <strong>{{ card.front }}</strong>
+              </div>
               <div class="text-muted">{{ card.back }}</div>
+              <div *ngIf="card.notes" class="text-muted small fst-italic mt-2">
+                Notes: {{ card.notes }}
+              </div>
             </div>
-            <div class="d-flex align-items-center flex-wrap gap-2">
+
+            <!-- Image and audio -->
+            <div class="col-12 col-md-3 d-flex flex-column gap-2">
+              <img
+                *ngIf="card.imageUrl"
+                [src]="card.imageUrl"
+                alt="Flashcard image"
+                class="img-thumbnail"
+                style="max-height: 100px; max-width: 100%; object-fit: contain"
+              />
+              <audio
+                *ngIf="card.audioUrl"
+                [src]="card.audioUrl"
+                controls
+                style="width: 100%"
+              ></audio>
+            </div>
+
+            <!-- Actions -->
+            <div
+              class="col-12 col-md-4 d-flex flex-wrap gap-2 justify-content-md-end"
+            >
               <select
                 class="form-select form-select-sm w-auto"
                 [ngModel]="card.topicId"

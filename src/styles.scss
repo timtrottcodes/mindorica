@@ -1,3 +1,15 @@
+:root {
+  --card-gradient-light: linear-gradient(145deg, #f9fafb, #e9eff5);
+  --card-gradient-dark: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+}
+
+/* Use the Inter font */
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+
 body.dark-theme {
   background-color: #121212;
   color: #e0e0e0;
@@ -35,6 +47,10 @@ body.dark-theme {
     border-color: #333;
   }
 
+  .border {
+    border-color: #333 !important;
+  }
+
   // Forms
   input,
   textarea,
@@ -53,7 +69,7 @@ body.dark-theme {
   }
 
   // Buttons
-  .btn {
+  /*.btn {
     background-color: #333;
     color: #e0e0e0;
     border-color: #555;
@@ -62,6 +78,10 @@ body.dark-theme {
   .btn:hover {
     background-color: #444;
     border-color: #666;
+  }*/
+
+  .btn-close {
+    filter: invert(100%) !important; /* becomes white */
   }
 
   // Select
@@ -117,8 +137,8 @@ body.dark-theme {
     color: #cccccc !important;
   }
 
-  .summary-table th,
-  .summary-table td {
+  table th,
+  table td {
     background-color: #1e1e1e !important;
     color: #e0e0e0 !important;
     border-color: #444 !important;
@@ -135,5 +155,48 @@ body.dark-theme {
     background: #1e1e1e !important;
     color: #e0e0e0 !important;
     border-color: #444 !important;
+  }
+
+  .flashcard .inner {
+    background: var(--card-gradient-dark);
+    color: #f1f1f1;
+  }
+
+  .img-thumbnail {
+    background-color: #222 !important;
+    border: #333 !important;
+  }
+
+
+  .alert {
+    color: #f1f1f1;
+    border-color: transparent;
+  }
+
+  .alert-info {
+    background-color: rgba(0, 123, 255, 0.2);
+    color: #80bdff;
+  }
+
+  .alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #71dd8a;
+  }
+
+  .alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffdd57;
+  }
+
+  .alert-danger,
+  .alert-error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #f28b82;
+  }
+
+  /* Optional: for alert links */
+  .alert a {
+    color: inherit;
+    text-decoration: underline;
   }
 }

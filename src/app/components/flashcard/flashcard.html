@@ -1,6 +1,38 @@
 <div class="flashcard" [class.flipped]="showBack" (click)="onFlip()">
   <div class="inner">
-    <div class="front">{{ card.front }}</div>
-    <div class="back">{{ card.back }}</div>
+
+    <!-- Front side -->
+    <div class="front">
+      <ng-container *ngIf="!card.imageBack && card.imageUrl">
+        <img [src]="card.imageUrl" alt="Front image" class="img-fluid flashcard-image mb-2" />
+      </ng-container>
+
+      <ng-container *ngIf="!card.audioBack && card.audioUrl">
+        <audio [src]="card.audioUrl" controls class="mb-2 w-100"></audio>
+      </ng-container>
+
+      <div [innerHTML]="card.front"></div>
+    </div>
+
+    <!-- Back side -->
+    <div class="back">
+      <div>
+        <ng-container *ngIf="card.imageBack && card.imageUrl">
+          <img [src]="card.imageUrl" alt="Back image" class="img-fluid flashcard-image mb-2" />
+        </ng-container>
+
+        <ng-container *ngIf="card.audioBack && card.audioUrl">
+          <audio [src]="card.audioUrl" controls class="mb-2 w-100"></audio>
+        </ng-container>
+
+        <div [innerHTML]="card.back"></div>
+
+        <div class="notes mt-2 text-muted" *ngIf="card.notes">
+          <hr />
+          <small><strong>Note:</strong> {{ card.notes }}</small>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

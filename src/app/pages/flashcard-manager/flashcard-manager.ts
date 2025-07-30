@@ -49,9 +49,20 @@ export class FlashcardManager {
     this.topicName = topic ? topic.name : this.topicId;
   }
 
-
   blankCard(): FlashcardModel {
-    return { id: '', topicId: this.topicId, front: '', back: '', flipped: false };
+      return {
+        id: '',
+        topicId: this.topicId,
+        front: '',
+        back: '',
+        imageUrl: undefined,
+        imageBack: false,
+        audioUrl: undefined,
+        audioBack: false,
+        notes: undefined,
+        flipped: false,
+        nextReviewDate: undefined
+      };
   }
 
   loadFlashcards() {
@@ -70,11 +81,17 @@ export class FlashcardManager {
   }
 
   saveFlashcard() {
+    const card = {
+      ...this.editCard,
+      id: this.editCard.id || crypto.randomUUID()
+    };
+
     if (this.editCard.id) {
-      this.flashcardService.updateFlashcard(this.editCard);
+      this.flashcardService.updateFlashcard(card);
     } else {
-      this.flashcardService.addFlashcard({ ...this.editCard, id: crypto.randomUUID() });
+      this.flashcardService.addFlashcard(card);
     }
+
     this.editCard = this.blankCard();
     this.loadFlashcards();
   }
@@ -92,6 +109,31 @@ export class FlashcardManager {
   
     if (card.topicId !== this.topicId) {
       this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
+    }
+  }
+
+  onFileChange(event: Event, type: 'image' | 'audio') {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (type === 'image') {
+        this.editCard.imageUrl = reader.result as string;
+      } else if (type === 'audio') {
+        this.editCard.audioUrl = reader.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearMedia(type: 'image' | 'audio') {
+    if (type === 'image') {
+      this.editCard.imageUrl = undefined;
+      this.editCard.imageBack = false;
+    } else if (type === 'audio') {
+      this.editCard.imageUrl = undefined;
+      this.editCard.audioBack = false;
     }
   }
 

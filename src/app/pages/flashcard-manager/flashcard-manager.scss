@@ -43,3 +43,16 @@
     }
   }
 }
+
+.flashcard-form-wrapper {
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.img-thumbnail {
+  border-radius: 0.5rem;
+}
+
+.dark-theme .img-thumbnail {
+   background-color: #222 !important;
+}

@@ -11,6 +11,12 @@ export interface FlashcardModel {
   topicId: string;
   flipped: boolean;
   nextReviewDate?: string;
+  audioUrl?: string;   // URL or base64
+  audioBack?: boolean;    // Optional audio for answer side
+  imageUrl?: string;   // URL or base64
+  imageBack?: boolean;
+  notes?: string;        // Optional explanation
+  tags?: string[];       // Optional tags for categorization
 }
 
 interface StudyStateModel {
