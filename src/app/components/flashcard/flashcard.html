@@ -3,6 +3,8 @@
 
     <!-- Front side -->
     <div class="front">
+      <div [innerHTML]="card.front"></div>
+
       <ng-container *ngIf="!card.imageBack && card.imageUrl">
         <img [src]="card.imageUrl" alt="Front image" class="img-fluid flashcard-image mb-2" />
       </ng-container>
@@ -10,8 +12,6 @@
       <ng-container *ngIf="!card.audioBack && card.audioUrl">
         <audio [src]="card.audioUrl" controls class="mb-2 w-100"></audio>
       </ng-container>
-
-      <div [innerHTML]="card.front"></div>
     </div>
 
     <!-- Back side -->

@@ -6,6 +6,7 @@ export interface TopicModel {
 
 export interface FlashcardModel {
   id: string;
+  parentId?: string;
   front: string;
   back: string;
   topicId: string;
@@ -17,6 +18,7 @@ export interface FlashcardModel {
   imageBack?: boolean;
   notes?: string;        // Optional explanation
   tags?: string[];       // Optional tags for categorization
+  options: FlashcardModel[];
 }
 
 interface StudyStateModel {

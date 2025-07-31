@@ -25,6 +25,8 @@ export class FlashcardViewer implements OnInit {
   countRatings: Record<number, number> = {};
   cardsToReview: { front: string; rating: number }[] = [];
   finalMessage = '';
+  shuffledOptions?: FlashcardModel[];
+  selectedOption: string | null = null;
 
   studyHistory: {
     card: FlashcardModel;
@@ -64,19 +66,36 @@ export class FlashcardViewer implements OnInit {
       return new Date(aDate).getTime() - new Date(bDate).getTime();
     });
 
-    const dueCards = sorted.filter(card =>
-      !card.nextReviewDate || card.nextReviewDate <= now
+    const dueCards = sorted.filter(
+      (card) => !card.nextReviewDate || card.nextReviewDate <= now
     );
 
-    const selected = dueCards.length >= 15
-      ? dueCards.slice(0, 15)
-      : sorted.slice(0, 15);
+    const selected =
+      dueCards.length >= 15 ? dueCards.slice(0, 15) : sorted.slice(0, 15);
 
     this.cards = this.shuffle(selected);
   }
 
   get currentCard(): FlashcardModel | undefined {
     return this.cards[this.currentIndex];
+  }
+
+  onSelectOption(choice: string, correct: string) {
+    this.selectedOption = choice;
+    this.flip();
+  }
+
+  getMultipleChoiceOptions(card: FlashcardModel): FlashcardModel[] {
+    if (!this.shuffledOptions) {
+      const wrongs = card.options ?? []; // already FlashcardModel[]
+      const allOptions = [card, ...wrongs]; // merge into one array
+      this.shuffledOptions = this.shuffleArray(allOptions);
+    }
+    return this.shuffledOptions;
+  }
+
+  shuffleArray<T>(array: T[]): T[] {
+    return [...array].sort(() => Math.random() - 0.5);
   }
 
   flip(): void {
@@ -121,6 +140,8 @@ export class FlashcardViewer implements OnInit {
   }
 
   advance(): void {
+    this.shuffledOptions = undefined;
+    this.selectedOption = '';
     this.currentIndex++;
     if (this.currentIndex >= this.cards.length) {
       this.reviewingDone = true;

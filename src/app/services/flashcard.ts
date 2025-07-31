@@ -82,7 +82,8 @@ export class FlashcardService {
       imageUrl: card.imageUrl || undefined,
       audioUrl: card.audioUrl || undefined,
       notes: card.notes || undefined,
-      nextReviewDate: card.nextReviewDate || undefined
+      nextReviewDate: card.nextReviewDate || undefined,
+      options: []
     };
 
     this.flashcards.push(newCard);

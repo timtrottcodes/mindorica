@@ -26,7 +26,7 @@
       >
         <!-- Front -->
         <div class="mb-3">
-          <label class="form-label">Front Text</label>
+          <label class="form-label">Question</label>
           <input
             class="form-control"
             [(ngModel)]="editCard.front"
@@ -39,7 +39,7 @@
 
         <!-- Back -->
         <div class="mb-3">
-          <label class="form-label">Back Text</label>
+          <label class="form-label">Answer</label>
           <input
             class="form-control"
             [(ngModel)]="editCard.back"
@@ -183,11 +183,21 @@
     <div *ngFor="let topicId of getTopicIds(groupedFlashcards)" class="mb-4">
       <h5 class="border-bottom pb-1">{{ topicId }}</h5>
 
-      <ul class="list-group mt-3">
+      <ul
+        class="list-group"
+        cdkDropList
+        [cdkDropListData]="groupedFlashcards[topicId]"
+        [cdkDropListConnectedTo]="getAllDropListIds(topicId)"
+        (cdkDropListDropped)="onCardDrop($event, topicId)"
+        [id]="'main-list-' + topicId"
+        [cdkDropListSortingDisabled]="true"
+      >
         <li
-          *ngFor="let card of groupedFlashcards[topicId]"
-          class="list-group-item py-3"
+          *ngFor="let card of groupedFlashcards[topicId]; let i = index"
+          class="list-group-item"
+          cdkDrag
         >
+          <!-- Card content -->
           <div class="row gx-3 gy-2 align-items-start">
             <!-- Front and back text -->
             <div class="col-12 col-md-5">
@@ -197,6 +207,14 @@
               <div class="text-muted">{{ card.back }}</div>
               <div *ngIf="card.notes" class="text-muted small fst-italic mt-2">
                 Notes: {{ card.notes }}
+              </div>
+              <div
+                *ngIf="card.options?.length"
+                class="text-muted small fst-italic mt-2"
+              >
+                {{ card.options!.length }} option{{
+                  card.options!.length > 1 ? "s" : ""
+                }}
               </div>
             </div>
 
@@ -243,6 +261,34 @@
                 Delete
               </button>
             </div>
+          </div>
+
+          <ul
+            class="list-group list-group-flush mt-2"
+            *ngIf="card.options"
+            cdkDropList
+            [cdkDropListData]="card.options"
+            [cdkDropListConnectedTo]="getAllDropListIds(topicId)"
+            (cdkDropListDropped)="onOptionDrop($event, card)"
+            [id]="'options-' + card.id"
+          >
+            <li
+              *ngFor="let option of card.options"
+              class="list-group-item border rounded bg-light ps-4"
+              cdkDrag
+            >
+              <div class="small text-muted">
+                Option: {{ option.front }} <span class="fst-italic">({{ option.back }})</span>
+              </div>
+            </li>
+          </ul>
+
+          <!-- Visual cue if no options yet -->
+          <div
+            *ngIf="!card.options || card.options.length < 2"
+            class="small text-muted mt-2 fst-italic"
+          >
+            Drag a card here to add an option (max 2)
           </div>
         </li>
       </ul>

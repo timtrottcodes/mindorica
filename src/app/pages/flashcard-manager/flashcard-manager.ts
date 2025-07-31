@@ -6,13 +6,14 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Modal } from 'bootstrap';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-flashcard-manager',
   templateUrl: './flashcard-manager.html',
   styleUrls: ['./flashcard-manager.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, DragDropModule],
 })
 export class FlashcardManager {
   topicId!: string;
@@ -23,6 +24,8 @@ export class FlashcardManager {
   deleteModal!: Modal;
   allTopics: TopicModel[] = [];
   groupedFlashcards: { [topicId: string]: FlashcardModel[] } = {};
+  draggedCard: FlashcardModel | null = null;
+  dragOverTarget: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -31,9 +34,11 @@ export class FlashcardManager {
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.topicId = params.get('topicId') || '';
-      this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
+      this.flashcards = this.flashcardService.getFlashcardsForTopic(
+        this.topicId
+      );
       this.allTopics = this.flashcardService.getTopics(); // Load all topics
       this.editCard = this.blankCard();
     });
@@ -51,24 +56,27 @@ export class FlashcardManager {
   }
 
   loadTopicName() {
-    const topic = this.flashcardService.getTopics().find(t => t.id === this.topicId);
+    const topic = this.flashcardService
+      .getTopics()
+      .find((t) => t.id === this.topicId);
     this.topicName = topic ? topic.name : this.topicId;
   }
 
   blankCard(): FlashcardModel {
-      return {
-        id: '',
-        topicId: this.topicId,
-        front: '',
-        back: '',
-        imageUrl: undefined,
-        imageBack: false,
-        audioUrl: undefined,
-        audioBack: false,
-        notes: undefined,
-        flipped: false,
-        nextReviewDate: undefined
-      };
+    return {
+      id: '',
+      topicId: this.topicId,
+      front: '',
+      back: '',
+      imageUrl: undefined,
+      imageBack: false,
+      audioUrl: undefined,
+      audioBack: false,
+      notes: undefined,
+      flipped: false,
+      nextReviewDate: undefined,
+      options: []
+    };
   }
 
   loadFlashcards() {
@@ -89,7 +97,7 @@ export class FlashcardManager {
   saveFlashcard() {
     const card = {
       ...this.editCard,
-      id: this.editCard.id || crypto.randomUUID()
+      id: this.editCard.id || crypto.randomUUID(),
     };
 
     if (this.editCard.id) {
@@ -112,9 +120,11 @@ export class FlashcardManager {
 
   moveCard(card: FlashcardModel) {
     this.flashcardService.updateFlashcard(card);
-  
+
     if (card.topicId !== this.topicId) {
-      this.flashcards = this.flashcardService.getFlashcardsForTopic(this.topicId);
+      this.flashcards = this.flashcardService.getFlashcardsForTopic(
+        this.topicId
+      );
     }
   }
 
@@ -161,4 +171,50 @@ export class FlashcardManager {
     this.flashcardService.deleteFlashcard(cardId);
     this.loadFlashcards();
   }
+
+  getAllDropListIds(topicId: string): string[] {
+    const flashcards = this.groupedFlashcards[topicId];
+    const dropIds = flashcards.map(card => `options-${card.id}`);
+    dropIds.push(`main-list-${topicId}`);
+    return dropIds;
+  }
+
+  onCardDrop(event: CdkDragDrop<FlashcardModel[]>, topicId: string) {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(this.groupedFlashcards[topicId], event.previousIndex, event.currentIndex);
+    } else {
+      const card = event.previousContainer.data[event.previousIndex];
+
+      // Remove from previous
+      event.previousContainer.data.splice(event.previousIndex, 1);
+
+      // Add to top-level
+      this.groupedFlashcards[topicId].splice(event.currentIndex, 0, card);
+    }
+  }
+
+  onOptionDrop(event: CdkDragDrop<FlashcardModel[]>, parentCard: FlashcardModel) {
+    const draggedCard = event.previousContainer.data[event.previousIndex];
+
+    // Prevent adding more than 2 options
+    if (!parentCard.options) {
+      parentCard.options = [];
+    }
+    if (parentCard.options.length >= 2) {
+      alert('Max 2 options allowed');
+      return;
+    }
+
+    // Prevent nesting a card inside itself
+    if (draggedCard === parentCard) {
+      return;
+    }
+
+    // Remove from old location
+    event.previousContainer.data.splice(event.previousIndex, 1);
+
+    // Add to options
+    parentCard.options.splice(event.currentIndex, 0, draggedCard);
+  }
+
 }

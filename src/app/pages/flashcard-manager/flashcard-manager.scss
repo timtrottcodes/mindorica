@@ -52,3 +52,43 @@
 .img-thumbnail {
   border-radius: 0.5rem;
 }
+
+.list-group-item {
+  user-select: none;
+  cursor: grab;
+  background:#fff;
+}
+
+.list-group-item:active {
+  cursor: grabbing;
+}
+
+ul[cdkDropList] {
+  min-height: 32px;
+  border: 1px dashed #ccc;
+  padding: 4px;
+  margin-bottom: 4px;
+}
+
+ul[cdkDropList] .list-group-item {
+  transition: background-color 0.2s ease;
+}
+
+ul[cdkDropList] .list-group-item:hover {
+  background-color: #f1f1f1;
+}
+
+.cdk-drag-preview {
+  border: 2px solid #007bff;   /* blue border */
+  opacity: 0.6;                /* semi-transparent */
+  transform: scale(0.5);       /* scale down */
+  z-index: 1000;               /* make sure it’s on top */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background: white;           /* or semi-transparent background */
+  border-radius: 8px;
+}
+
+.ps-4 {
+  padding-left: 1.5rem !important;
+}
+
