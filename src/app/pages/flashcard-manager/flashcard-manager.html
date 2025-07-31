@@ -204,14 +204,14 @@
             <div class="col-12 col-md-3 d-flex flex-column gap-2">
               <img
                 *ngIf="card.imageUrl"
-                [src]="card.imageUrl"
+                [src]="getSafeUrl(card.imageUrl)"
                 alt="Flashcard image"
                 class="img-thumbnail"
                 style="max-height: 100px; max-width: 100%; object-fit: contain"
               />
               <audio
                 *ngIf="card.audioUrl"
-                [src]="card.audioUrl"
+                [src]="getSafeUrl(card.audioUrl)"
                 controls
                 style="width: 100%"
               ></audio>

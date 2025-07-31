@@ -101,6 +101,25 @@
     </div>
   </div>
 
+  <div class="card border-danger mt-4">
+    <div class="card-body">
+      <h5 class="card-title text-danger">Load Demo Data</h5>
+      <p class="card-text">
+        This will
+        <strong>delete your existing flashcards and topics</strong> and replace
+        them with 20 general knowledge demo cards, including image and audio
+        examples.
+      </p>
+      <button
+        class="btn btn-danger"
+        data-bs-toggle="modal"
+        data-bs-target="#confirmDemoModal"
+      >
+        Load Demo Data
+      </button>
+    </div>
+  </div>
+
   <!-- Danger Zone -->
   <div class="card border-danger my-5">
     <div class="card-header bg-danger text-white">Danger Zone</div>
@@ -157,6 +176,46 @@
           data-bs-dismiss="modal"
         >
           Yes, Delete All
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div
+  class="modal fade"
+  id="confirmDemoModal"
+  tabindex="-1"
+  aria-labelledby="confirmDemoModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDemoModalLabel">Confirm Load</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        This will delete all your current flashcards and topics. Are you sure
+        you want to continue?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="loadDemoData()"
+          data-bs-dismiss="modal"
+        >
+          Yes, Load Demo
         </button>
       </div>
     </div>

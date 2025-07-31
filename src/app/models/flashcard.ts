@@ -9,7 +9,7 @@ export interface FlashcardModel {
   front: string;
   back: string;
   topicId: string;
-  flipped: boolean;
+  flipped?: boolean;
   nextReviewDate?: string;
   audioUrl?: string;   // URL or base64
   audioBack?: boolean;    // Optional audio for answer side

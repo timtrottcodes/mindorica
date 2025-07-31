@@ -5,6 +5,7 @@ import { FlashcardModel, TopicModel } from '../../models/flashcard';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Modal } from 'bootstrap';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-flashcard-manager',
@@ -25,7 +26,8 @@ export class FlashcardManager {
 
   constructor(
     private route: ActivatedRoute,
-    private flashcardService: FlashcardService
+    private flashcardService: FlashcardService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -38,6 +40,10 @@ export class FlashcardManager {
 
     this.loadGroupedFlashcards();
     this.loadTopicName();
+  }
+
+  getSafeUrl(dataUrl: string | undefined): SafeUrl | null {
+    return dataUrl ? this.sanitizer.bypassSecurityTrustUrl(dataUrl) : null;
   }
 
   getTopicIds(grouped: { [topicId: string]: FlashcardModel[] }): string[] {
