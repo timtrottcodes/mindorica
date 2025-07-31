@@ -26,6 +26,12 @@ export class FlashcardService {
     localStorage.setItem(this.cardsKey, JSON.stringify(this.flashcards));
   }
 
+  saveFlashcardsAndTopics(allTopics: TopicModel[], flashcards: FlashcardModel[]) {
+    this.topics = allTopics;
+    this.flashcards = flashcards;
+    this.save();
+  }
+
   // Topics
   getTopics(): TopicModel[] {
     return [...this.topics];

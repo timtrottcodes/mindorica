@@ -32,10 +32,10 @@ import { CommonModule } from '@angular/common';
               <a class="nav-link" [routerLink]="[AppRoutes.Home]">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="[AppRoutes.TopicManager]">Topics</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.TopicManager]">Topic Admin</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="[AppRoutes.Import]">Import</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.Import]">Import/Export</a>
             </li>
           </ul>
 

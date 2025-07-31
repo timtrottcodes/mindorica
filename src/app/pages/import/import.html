@@ -1,20 +1,164 @@
 <div class="container py-4">
-  <h2 class="mb-4">Import Anki Deck (.apkg)</h2>
+  <h2 class="mb-4">Import & Export Flashcards</h2>
 
-  <form>
-    <div class="mb-3">
-      <label for="deckFile" class="form-label">Select .apkg File</label>
-      <input type="file" class="form-control" id="deckFile" accept=".apkg" />
+  <!-- Export Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Export Your Data</h5>
+      <p class="card-text">
+        You can download your topics and flashcards in JSON format.
+      </p>
+
+      <div *ngIf="hasData(); else noDataNotice" class="d-flex flex-wrap gap-2">
+        <button
+          class="btn btn-outline-primary"
+          (click)="exportTopicsAndFlashcards()"
+        >
+          Download Flashcards
+        </button>
+      </div>
+
+      <ng-template #noDataNotice>
+        <div class="alert alert-warning mt-3">
+          No topics or flashcards found. Please add some before exporting.
+        </div>
+        <button class="btn btn-outline-primary" disabled>
+          Download Flashcards
+        </button>
+      </ng-template>
     </div>
+  </div>
 
-    <div class="mb-3">
-      <label for="topicSelect" class="form-label">Assign to Topic</label>
-      <select class="form-select" id="topicSelect">
-        <option disabled selected>Select topic</option>
-        <!-- Will be populated dynamically -->
-      </select>
+  <!-- Import Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Import Data</h5>
+      <p class="card-text">
+        Upload a backup JSON file to restore your flashcards. You can either
+        replace or merge with your current data.
+      </p>
+
+      <div class="mb-3">
+        <label for="importFile" class="form-label">Choose JSON/ File</label>
+        <input
+          type="file"
+          class="form-control"
+          id="importFile"
+          accept=".json,application/json,.zip,application/zip"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+
+      <div class="form-check mb-3">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="overrideImport"
+          [(ngModel)]="importOverride"
+        />
+        <label class="form-check-label" for="overrideImport">
+          Override existing data (clears and replaces everything)
+        </label>
+      </div>
+
+      <button
+        class="btn btn-primary"
+        [disabled]="!selectedFile"
+        (click)="importData(selectedFile)"
+      >
+        Import JSON
+      </button>
     </div>
+  </div>
 
-    <button class="btn btn-primary" disabled>Import (coming soon)</button>
-  </form>
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Import Anki Deck (.apkg)</h5>
+      <p class="card-text">Coming soon.</p>
+
+      <form>
+        <div class="mb-3">
+          <label for="deckFile" class="form-label">Select .apkg File</label>
+          <input
+            type="file"
+            class="form-control"
+            id="deckFile"
+            accept=".apkg"
+            disabled
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="topicSelect" class="form-label">Assign to Topic</label>
+          <select disabled class="form-select" id="topicSelect">
+            <option disabled selected>Select topic</option>
+            <!-- Will be populated dynamically -->
+          </select>
+        </div>
+
+        <button class="btn btn-primary" disabled>Import (coming soon)</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card border-danger my-5">
+    <div class="card-header bg-danger text-white">Danger Zone</div>
+    <div class="card-body">
+      <h5 class="card-title text-danger">Delete All Data</h5>
+      <p class="card-text">
+        This will permanently delete all flashcards and topics stored in your
+        browser. This action cannot be undone.
+      </p>
+      <button
+        class="btn btn-danger"
+        data-bs-toggle="modal"
+        data-bs-target="#confirmDeleteModal"
+      >
+        Delete All Data
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div
+  class="modal fade"
+  id="confirmDeleteModal"
+  tabindex="-1"
+  aria-labelledby="confirmDeleteModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">
+          Confirm Deletion
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong>all data</strong>? This cannot
+        be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="deleteAllData()"
+          data-bs-dismiss="modal"
+        >
+          Yes, Delete All
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

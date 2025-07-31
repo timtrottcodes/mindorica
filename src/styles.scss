@@ -5,10 +5,9 @@
 
 /* Use the Inter font */
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   line-height: 1.6;
 }
-
 
 body.dark-theme {
   background-color: #121212;
@@ -167,7 +166,6 @@ body.dark-theme {
     border: #333 !important;
   }
 
-
   .alert {
     color: #f1f1f1;
     border-color: transparent;
@@ -198,5 +196,22 @@ body.dark-theme {
   .alert a {
     color: inherit;
     text-decoration: underline;
+  }
+
+
+  /* Apply dark theme to Bootstrap modal */
+  .modal-header {
+    border-bottom: none;
+  }
+
+  .modal-body {
+    background-color: #222 !important;
+    color: #f1f1f1 !important;
+    border: 1px solid #222 !important;
+  }
+
+  .modal-footer {
+    background-color: #222 !important;
+    border-top: 1px solid #444 !important;
   }
 }
