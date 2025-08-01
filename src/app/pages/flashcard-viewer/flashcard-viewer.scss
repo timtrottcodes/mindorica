@@ -96,6 +96,26 @@ ul.list-group li {
   color: #721c24 !important;
 }
 
+.btn-very-hard {
+  background-color: #dc3545; /* red */
+  color: white;
+}
+
+.btn-hard {
+  background-color: #fd7e14; /* orange */
+  color: white;
+}
+
+.btn-ok {
+  background-color: #ffc107; /* yellow */
+  color: black;
+}
+
+.btn-easy {
+  background-color: #28a745; /* green */
+  color: white;
+}
+
 @media (min-width: 640px) {
   /* Your styles here */
   .list-group {

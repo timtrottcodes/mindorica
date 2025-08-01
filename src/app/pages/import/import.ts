@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import initSqlJs from 'sql.js';
 
 @Component({
   selector: 'app-import',
@@ -16,10 +17,13 @@ import { saveAs } from 'file-saver';
 export class Import {
   allTopics: TopicModel[] = [];
   flashcards: FlashcardModel[] = [];
-  public importOverride: boolean = false;
-
+  importOverride: boolean = false;
+  importMessage: string | null = null;
+  selectedAnkiTopicId: string | null = null;
+  selectedAnkiFile: File | null = null;
   selectedFile: File | null = null;
   isZipFile = false;
+  
 
   constructor(
     private route: ActivatedRoute,
@@ -53,9 +57,6 @@ export class Import {
     }
 
     this.isZipFile = isZip;
-
-    // We'll handle the actual import parsing later
-    console.log('Selected file:', file.name);
   }
 
   async exportTopicsAndFlashcards(): Promise<void> {
@@ -104,6 +105,7 @@ export class Import {
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
     saveAs(zipBlob, 'flashcards-export.zip');
+    this.success("Flashcards exported");
   }
 
   async importData(file: File | null): Promise<void> {
@@ -222,7 +224,7 @@ Do you want to overwrite these?
         this.allTopics,
         this.flashcards
       );
-      alert('Import successful!');
+      this.success("Import successful");
     } catch (err) {
       console.error(err);
       alert(
@@ -474,6 +476,171 @@ Do you want to overwrite these?
       demoCards
     );
     location.reload(); // Refresh to reflect changes
+  }
+
+  onAnkiFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedAnkiFile = input.files[0];
+    }
+  }
+
+  onAnkiImportSubmit(event: Event): void {
+      event.preventDefault(); // Prevent form reload
+
+      if (!this.selectedAnkiFile || !this.selectedAnkiTopicId) {
+        alert('Please select both a file and a topic.');
+        return;
+      }
+
+      // Call your import method
+      this.importAnkiFile(this.selectedAnkiFile, this.selectedAnkiTopicId);
+    }
+
+  async importAnkiFile(file: File, topicId: string): Promise<void> {
+    const zip = await JSZip.loadAsync(file);
+    const dbFile = zip.file('collection.anki21') ?? zip.file('collection.anki2');
+
+    if (!dbFile) {
+      alert('Invalid Anki file: no collection.anki21 or .anki2 found.');
+      return;
+    }
+
+    const dbArrayBuffer = await dbFile.async('arraybuffer');
+    const SQL = await initSqlJs({ locateFile: () => 'assets/sql-wasm.wasm' });
+    const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
+
+    const result = db.exec(`SELECT flds FROM notes`);
+    if (!result.length) {
+      alert('No notes found in Anki deck.');
+      return;
+    }
+
+    // Build media map (id -> filename) and reverse it
+    const mediaFile = zip.file('media');
+    const mediaRaw = mediaFile ? await mediaFile.async('string') : '{}';
+    const mediaMap = JSON.parse(mediaRaw) as Record<string, string>;
+
+    // Convert to filename -> index for easy lookup
+    const filenameToIndex: Record<string, string> = {};
+    for (const [index, filename] of Object.entries(mediaMap)) {
+      filenameToIndex[filename] = index;
+    }
+
+    // Load binary media files
+    const mediaFiles: Record<string, Uint8Array> = {};
+    for (const [index, filename] of Object.entries(mediaMap)) {
+      const file = zip.file(index);
+      if (file) {
+        mediaFiles[filename] = new Uint8Array(await file.async('uint8array'));
+      }
+    }
+
+    const rows = result[0].values.map(r => r[0] as string);
+    const cards = this.extractNotes(rows, mediaFiles, mediaMap);
+
+    for (const card of cards) {
+      card.topicId = topicId;
+      this.flashcards.push(card);
+    }
+
+    this.flashcardService.saveFlashcardsAndTopics(this.allTopics, this.flashcards);
+    const topic = this.allTopics.find(t => t.id === topicId);
+    this.success(`${cards.length} card(s) imported to topic “${topic?.name}”.`);
+  }
+
+
+  success(msg: string) {
+    this.importMessage = msg;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => this.importMessage = null, 5000);
+  }
+
+  extractNotes(fldsRows: string[], mediaFiles: Record<string, Uint8Array>, mediaMap: Record<string, string>) {
+    const fieldSeparator = '\x1f';
+    const cards: FlashcardModel[] = [];
+
+    for (const flds of fldsRows) {
+      const fields = flds.split(fieldSeparator);
+      const rawFront = fields[0] ?? '';
+      const rawBack = fields[1] ?? '';
+      const notesRaw = fields.slice(2).filter(Boolean).join('\n');
+
+      const mediaInfo = {
+        audioUrl: '',
+        audioBack: false,
+        imageUrl: '',
+        imageBack: false,
+      };
+
+      const front = this.stripAndExtractMedia(rawFront, mediaFiles, mediaMap, mediaInfo, false);
+      const back = this.stripAndExtractMedia(rawBack, mediaFiles, mediaMap, mediaInfo, true);
+      const notes = this.stripAndExtractMedia(notesRaw, mediaFiles, mediaMap, mediaInfo, false);
+
+      const card: FlashcardModel = {
+        id: crypto.randomUUID(),
+        topicId: '', // set later
+        front,
+        back,
+        notes,
+        options: [],
+        ...mediaInfo
+      };
+
+      cards.push(card);
+    }
+
+    console.log(cards);
+    return cards;
+  }
+
+  stripAndExtractMedia(
+    text: string,
+    mediaFiles: Record<string, Uint8Array>,
+    mediaMap: Record<string, string>,
+    mediaInfo: { audioUrl: string, audioBack: boolean, imageUrl: string, imageBack: boolean },
+    isBack: boolean
+  ): string {
+    return text
+      .replace(/\[sound:(.+?)\]/g, (_, filename) => {
+        const mediaKey = Object.keys(mediaMap).find(k => mediaMap[k] === filename);
+        const file = mediaKey ? mediaFiles[mediaMap[mediaKey]] : undefined;
+        if (file && !mediaInfo.audioUrl) {
+          const b64 = this.toBase64(file);
+          mediaInfo.audioUrl = `data:audio/mpeg;base64,${b64}`;
+          mediaInfo.audioBack ||= isBack;
+        }
+        return '';
+      })
+      .replace(/<img[^>]*src=["']([^"']+)["'][^>]*>/g, (_, filename) => {
+        const mediaKey = Object.keys(mediaMap).find(k => mediaMap[k] === filename);
+        const file = mediaKey ? mediaFiles[mediaMap[mediaKey]] : undefined;
+        if (file && !mediaInfo.imageUrl) {
+          const b64 = this.toBase64(file);
+          mediaInfo.imageUrl = `data:image/jpeg;base64,${b64}`;
+          mediaInfo.imageBack ||= isBack;
+        }
+        return '';
+      })
+      .replace(/^(<br\s*\/?>)+/, '') // trim leading <br>
+      .trim();
+  }
+
+  toBase64(file: Uint8Array): string {
+    return btoa(String.fromCharCode(...file));
+  }
+
+  importToMindorica(notes: any[]) {
+    for (const note of notes) {
+      const card = {
+        front: note.front,
+        back: note.back,
+        notes: note.note,
+        options: [] // Optional: add support for extracting options
+      };
+
+      this.flashcardService.addFlashcard(card); // your internal service
+    }
   }
 
   private generateId(): string {

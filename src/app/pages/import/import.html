@@ -1,6 +1,10 @@
 <div class="container py-4">
   <h2 class="mb-4">Import & Export Flashcards</h2>
 
+  <div *ngIf="importMessage" class="alert alert-success mt-3">
+    {{ importMessage }}
+  </div>
+
   <!-- Export Section -->
   <div class="card mb-4">
     <div class="card-body">
@@ -74,9 +78,9 @@
   <div class="card mb-4">
     <div class="card-body">
       <h5 class="card-title">Import Anki Deck (.apkg)</h5>
-      <p class="card-text">Coming soon.</p>
+      <p class="card-text">This feature is experimental. Use with caution.</p>
 
-      <form>
+      <form (submit)="onAnkiImportSubmit($event)">
         <div class="mb-3">
           <label for="deckFile" class="form-label">Select .apkg File</label>
           <input
@@ -84,19 +88,19 @@
             class="form-control"
             id="deckFile"
             accept=".apkg"
-            disabled
+            (change)="onAnkiFileSelected($event)"
           />
         </div>
 
         <div class="mb-3">
           <label for="topicSelect" class="form-label">Assign to Topic</label>
-          <select disabled class="form-select" id="topicSelect">
-            <option disabled selected>Select topic</option>
-            <!-- Will be populated dynamically -->
+          <select class="form-select" id="topicSelect" [(ngModel)]="selectedAnkiTopicId" name="topicSelect">
+            <option [ngValue]="null">Select topic</option>
+            <option *ngFor="let topic of allTopics" [value]="topic.id">{{ topic.name }}</option>
           </select>
         </div>
 
-        <button class="btn btn-primary" disabled>Import (coming soon)</button>
+        <button type="submit" class="btn btn-primary">Import</button>
       </form>
     </div>
   </div>
