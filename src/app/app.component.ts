@@ -60,7 +60,7 @@ import { CommonModule } from '@angular/common';
     </ng-template>
 
     <footer class="text-muted text-center py-3 mt-auto">
-      &copy; 2025 Mindorica — All rights reserved.
+      Mindorica &copy; 2025 <a href="https://github.com/timtrottcodes">TimTrottCodes</a> — All rights reserved.
     </footer>
   `,
 })
