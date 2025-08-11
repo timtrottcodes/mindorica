@@ -89,18 +89,19 @@
             id="deckFile"
             accept=".apkg"
             (change)="onAnkiFileSelected($event)"
+            disabled
           />
         </div>
 
         <div class="mb-3">
           <label for="topicSelect" class="form-label">Assign to Topic</label>
-          <select class="form-select" id="topicSelect" [(ngModel)]="selectedAnkiTopicId" name="topicSelect">
+          <select class="form-select" id="topicSelect" [(ngModel)]="selectedAnkiTopicId" name="topicSelect" disabled>
             <option [ngValue]="null">Select topic</option>
             <option *ngFor="let topic of allTopics" [value]="topic.id">{{ topic.name }}</option>
           </select>
         </div>
 
-        <button type="submit" class="btn btn-primary">Import</button>
+        <button type="submit" class="btn btn-primary" disabled>Import</button>
       </form>
     </div>
   </div>

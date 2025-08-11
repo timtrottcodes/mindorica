@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import initSqlJs from 'sql.js';
+//import initSqlJs from 'sql.js';
 
 @Component({
   selector: 'app-import',
@@ -494,10 +494,10 @@ Do you want to overwrite these?
       }
 
       // Call your import method
-      this.importAnkiFile(this.selectedAnkiFile, this.selectedAnkiTopicId);
+      //this.importAnkiFile(this.selectedAnkiFile, this.selectedAnkiTopicId);
     }
 
-  async importAnkiFile(file: File, topicId: string): Promise<void> {
+  /*async importAnkiFile(file: File, topicId: string): Promise<void> {
     const zip = await JSZip.loadAsync(file);
     const dbFile = zip.file('collection.anki21') ?? zip.file('collection.anki2');
 
@@ -547,7 +547,7 @@ Do you want to overwrite these?
     this.flashcardService.saveFlashcardsAndTopics(this.allTopics, this.flashcards);
     const topic = this.allTopics.find(t => t.id === topicId);
     this.success(`${cards.length} card(s) imported to topic “${topic?.name}”.`);
-  }
+  }*/
 
 
   success(msg: string) {
