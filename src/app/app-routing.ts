@@ -1,5 +1,5 @@
 // src/app/app-routing.ts
-import { Routes, provideRouter } from '@angular/router';
+import { Routes, provideRouter, withHashLocation } from '@angular/router';
 import { Home } from './pages/home/home';
 import { TopicManager } from './pages/topic-manager/topic-manager';
 import { Import } from './pages/import/import';
@@ -26,5 +26,5 @@ export const routes: Routes = [
 ];
 
 export const appRouterProviders = [
-  provideRouter(routes),
+  provideRouter(routes, withHashLocation()),
 ];
