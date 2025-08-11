@@ -16,6 +16,8 @@ Mindorica isn’t just a flashcard tool. It’s a mental habitat — a place to 
 
 Join us as we shape the future of personal learning — thoughtfully, intentionally, and beautifully.
 
+👉 [Try the Online Demo here](https://timtrottcodes.github.io/mindorica/) and start exploring now!
+
 ---
 
 ## ✨ Why Mindorica?
@@ -64,7 +66,7 @@ Mindorica now supports:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourusername/mindorica.git
+git clone https://github.com/timtrottcodes/mindorica.git
 cd mindorica
 
 # 2. Install dependencies
