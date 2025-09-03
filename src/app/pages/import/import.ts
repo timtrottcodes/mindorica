@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { from } from 'rxjs';
 //import initSqlJs from 'sql.js';
 
 @Component({
@@ -31,8 +32,15 @@ export class Import {
   ) {}
 
   ngOnInit(): void {
-    this.allTopics = this.flashcardService.getTopics();
-    this.flashcards = this.flashcardService.getFlashcards();
+    // Topics
+    from(this.flashcardService.getTopics()).subscribe((topics) => {
+      this.allTopics = topics;
+    });
+
+    // Flashcards
+    from(this.flashcardService.getFlashcards()).subscribe((cards) => {
+      this.flashcards = cards;
+    });
   }
 
   hasData(): boolean {
