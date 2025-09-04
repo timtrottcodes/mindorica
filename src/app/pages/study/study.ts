@@ -5,6 +5,7 @@ import { TopicModel } from '../../models/flashcard';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppRoutes } from '../../app-routing';
+import { from } from 'rxjs';
 
 @Component({
   selector: 'app-study',
@@ -23,44 +24,50 @@ export class Study implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const allTopics = this.flashcardService.getTopics();
-    if (!allTopics.length) {
-      this.router.navigate(['/topic-manager']);
-      return;
-    }
+    from(this.flashcardService.getTopics()).subscribe(async (allTopics) => {
+      if (!allTopics.length) {
+        this.router.navigate(['/topic-manager']);
+        return;
+      }
 
-    const topicWithCounts = allTopics
-      .map(topic => {
-        const cards = this.flashcardService.getFlashcardsForTopic(topic.id);
-        return { topic, count: cards.length };
-      })
-      .filter(tc => tc.count > 0);
+      // Load card counts for all topics in parallel
+      const topicWithCounts = (
+        await Promise.all(
+          allTopics.map(async (topic) => {
+            const cards = await this.flashcardService.getFlashcardsForTopic(topic.id);
+            return { topic, count: cards.length };
+          })
+        )
+      ).filter((tc) => tc.count > 0);
 
-    // Filter out parent topics if any of their subtopics have cards
-    const leafOnly = topicWithCounts.filter(tc => {
-      const isParent = topicWithCounts.some(
-        other => other.topic.id.startsWith(tc.topic.id + '/') && other.topic.id !== tc.topic.id
-      );
-      return !isParent;
+      // Filter out parent topics if any of their subtopics have cards
+      const leafOnly = topicWithCounts.filter((tc) => {
+        const isParent = topicWithCounts.some(
+          (other) =>
+            other.topic.id.startsWith(tc.topic.id + '/') &&
+            other.topic.id !== tc.topic.id
+        );
+        return !isParent;
+      });
+
+      if (!leafOnly.length) {
+        this.router.navigate(['/topic-manager']);
+        return;
+      }
+
+      this.topicCounts = leafOnly;
+
+      // Build category list
+      const categorySet = new Set<string>();
+      for (const tc of this.topicCounts) {
+        const [category] = tc.topic.id.split('/');
+        categorySet.add(category);
+      }
+
+      this.categories = ['All', ...Array.from(categorySet).sort()];
+      this.applyFilter();
     });
-
-    if (!leafOnly.length) {
-      this.router.navigate(['/topic-manager']);
-      return;
-    }
-
-    this.topicCounts = leafOnly;
-
-    const categorySet = new Set<string>();
-    for (const tc of this.topicCounts) {
-      const [category] = tc.topic.id.split('/');
-      categorySet.add(category);
-    }
-
-    this.categories = ['All', ...Array.from(categorySet).sort()];
-    this.applyFilter();
   }
-
 
   applyFilter(): void {
     this.filteredTopics = this.selectedCategory === 'All'

@@ -48,8 +48,8 @@ export class FlashcardViewer implements OnInit {
     this.getFlashcards();
   }
 
-  getFlashcards(): void {
-    const raw = this.flashcardService.getFlashcardsForTopic(this.topicId);
+  async getFlashcards() {
+    const raw = await this.flashcardService.getFlashcardsForTopic(this.topicId);
 
     // If less than or equal to 15, just shuffle and return
     if (raw.length <= 15) {

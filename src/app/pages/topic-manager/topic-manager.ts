@@ -32,8 +32,8 @@ export class TopicManager {
     this.placeholderTopic = this.sampleTopics[index];
   }
 
-  loadTopics() {
-    this.topics = this.flashcardService.getTopics();
+  async loadTopics() {
+    this.topics = await this.flashcardService.getTopics();
   }
 
   addTopic() {

@@ -1,76 +1,124 @@
 // src/app/services/flashcard.service.ts
 
 import { Injectable } from '@angular/core';
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { FlashcardModel, TopicModel } from '../models/flashcard';
 import { v4 as uuidv4 } from 'uuid';
 
+interface MindoricaDB extends DBSchema {
+  topics: {
+    key: string;
+    value: TopicModel;
+  };
+  flashcards: {
+    key: string;
+    value: FlashcardModel;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class FlashcardService {
-  private topicsKey = 'mindorica_topics';
+  private dbPromise: Promise<IDBPDatabase<MindoricaDB>>;
+  // legacy localStorage keys
+  private topicsKey = 'mindorica_topics';      
   private cardsKey = 'mindorica_flashcards';
 
-  private topics: TopicModel[] = [];
-  private flashcards: FlashcardModel[] = [];
-
   constructor() {
-    this.load();
+    this.dbPromise = this.initDB();
   }
 
-  private load() {
-    this.topics = JSON.parse(localStorage.getItem(this.topicsKey) || '[]');
-    this.flashcards = JSON.parse(localStorage.getItem(this.cardsKey) || '[]');
+  private async initDB(): Promise<IDBPDatabase<MindoricaDB>> {
+    const db = await openDB<MindoricaDB>('mindorica-db', 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('topics')) {
+          db.createObjectStore('topics', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('flashcards')) {
+          db.createObjectStore('flashcards', { keyPath: 'id' });
+        }
+      }
+    });
+
+    // migrate data from localStorage if found
+    const oldTopics = localStorage.getItem(this.topicsKey);
+    const oldFlashcards = localStorage.getItem(this.cardsKey);
+
+    if (oldTopics || oldFlashcards) {
+      const topics: TopicModel[] = JSON.parse(oldTopics || '[]');
+      const flashcards: FlashcardModel[] = JSON.parse(oldFlashcards || '[]');
+
+      const tx = db.transaction(['topics', 'flashcards'], 'readwrite');
+      for (const t of topics) await tx.objectStore('topics').put(t);
+      for (const c of flashcards) await tx.objectStore('flashcards').put(c);
+      await tx.done;
+
+      localStorage.removeItem(this.topicsKey);
+      localStorage.removeItem(this.cardsKey);
+
+      alert('Your flashcards have been migrated to a new database for more storage capacity.');
+    }
+
+    return db;
   }
 
-  private save() {
-    localStorage.setItem(this.topicsKey, JSON.stringify(this.topics));
-    localStorage.setItem(this.cardsKey, JSON.stringify(this.flashcards));
+  // Save everything in one go
+  async saveFlashcardsAndTopics(allTopics: TopicModel[], flashcards: FlashcardModel[]) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(['topics', 'flashcards'], 'readwrite');
+
+    // clear and reinsert
+    await tx.objectStore('topics').clear();
+    await tx.objectStore('flashcards').clear();
+
+    for (const t of allTopics) await tx.objectStore('topics').put(t);
+    for (const f of flashcards) await tx.objectStore('flashcards').put(f);
+
+    await tx.done;
   }
 
-  saveFlashcardsAndTopics(allTopics: TopicModel[], flashcards: FlashcardModel[]) {
-    this.topics = allTopics;
-    this.flashcards = flashcards;
-    this.save();
+  // 🔹 Topics
+  async getTopics(): Promise<TopicModel[]> {
+    const db = await this.dbPromise;
+    return await db.getAll('topics');
   }
 
-  // Topics
-  getTopics(): TopicModel[] {
-    return [...this.topics];
-  }
+  async addTopic(fullId: string): Promise<void> {
+    const db = await this.dbPromise;
+    const topics = await db.getAll('topics');
 
-  addTopic(fullId: string) {
-    // Don't add if it already exists
-    if (this.topics.find(t => t.id === fullId)) return;
+    if (topics.find(t => t.id === fullId)) return;
 
     const parts = fullId.split('/');
     const name = parts[parts.length - 1];
     const parentId = parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
 
-    // Recursively add parent first if needed
-    if (parentId && !this.topics.find(t => t.id === parentId)) {
-      this.addTopic(parentId);
+    // recursively add parent first
+    if (parentId && !topics.find(t => t.id === parentId)) {
+      await this.addTopic(parentId);
     }
 
-    // Add the current topic
-    this.topics.push({
+    const newTopic: TopicModel = {
       id: fullId,
       name,
-      parent: parentId,
-    });
+      parent: parentId
+    };
 
-    this.save();
+    await db.put('topics', newTopic);
   }
 
+  // 🔹 Flashcards
+  async getFlashcards(topicId?: string): Promise<FlashcardModel[]> {
+    const db = await this.dbPromise;
+    const all = await db.getAll('flashcards');
 
-  // Flashcards
-  getFlashcards(topicId?: string): FlashcardModel[] {
     if (topicId) {
-      const relevantTopics = this.getDescendantTopicIds(topicId);
-      return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
+      const relevantTopics = await this.getDescendantTopicIds(topicId);
+      return all.filter(card => relevantTopics.includes(card.topicId));
     }
-    return [...this.flashcards];
+    return all;
   }
 
-  addFlashcard(card: Partial<FlashcardModel>) {
+  async addFlashcard(card: Partial<FlashcardModel>): Promise<void> {
     if (!card.front || !card.back || !card.topicId) return;
 
     const newCard: FlashcardModel = {
@@ -86,41 +134,39 @@ export class FlashcardService {
       options: []
     };
 
-    this.flashcards.push(newCard);
-    this.save();
+    const db = await this.dbPromise;
+    await db.put('flashcards', newCard);
   }
 
-  updateFlashcard(updatedCard: FlashcardModel) {
-    const index = this.flashcards.findIndex(c => c.id === updatedCard.id);
-    if (index !== -1) {
-      this.flashcards[index] = {
-        ...this.flashcards[index],
-        ...updatedCard
-      };
-      this.save();
-    }
+  async updateFlashcard(updatedCard: FlashcardModel): Promise<void> {
+    const db = await this.dbPromise;
+    await db.put('flashcards', updatedCard);
   }
 
-  deleteFlashcard(id: string) {
-    this.flashcards = this.flashcards.filter(card => card.id !== id);
-    this.save();
+  async deleteFlashcard(id: string): Promise<void> {
+    const db = await this.dbPromise;
+    await db.delete('flashcards', id);
   }
 
-  // Recursive topic helper
-  private getDescendantTopicIds(topicId: string): string[] {
+  // 🔹 Recursive topic helper
+  private async getDescendantTopicIds(topicId: string): Promise<string[]> {
+    const db = await this.dbPromise;
+    const topics = await db.getAll('topics');
+
     const descendants = new Set<string>();
-
     const collect = (id: string) => {
       descendants.add(id);
-      this.topics.filter(t => t.parent === id).forEach(child => collect(child.id));
+      topics.filter(t => t.parent === id).forEach(child => collect(child.id));
     };
 
     collect(topicId);
     return Array.from(descendants);
   }
 
-  getFlashcardsForTopic(topicId: string): FlashcardModel[] {
-    const relevantTopics = this.getDescendantTopicIds(topicId);
-    return this.flashcards.filter(card => relevantTopics.includes(card.topicId));
-  }  
+  async getFlashcardsForTopic(topicId: string): Promise<FlashcardModel[]> {
+    const relevantTopics = await this.getDescendantTopicIds(topicId);
+    const db = await this.dbPromise;
+    const all = await db.getAll('flashcards');
+    return all.filter(card => relevantTopics.includes(card.topicId));
+  }
 }

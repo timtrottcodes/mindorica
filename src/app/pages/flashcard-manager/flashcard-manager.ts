@@ -34,17 +34,17 @@ export class FlashcardManager {
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.subscribe(async (params) => {
       this.topicId = params.get('topicId') || '';
-      this.flashcards = this.flashcardService.getFlashcardsForTopic(
+      this.flashcards = await this.flashcardService.getFlashcardsForTopic(
         this.topicId
       );
-      this.allTopics = this.flashcardService.getTopics(); // Load all topics
+      this.allTopics = await this.flashcardService.getTopics(); // Load all topics
       this.editCard = this.blankCard();
-    });
 
-    this.loadGroupedFlashcards();
-    this.loadTopicName();
+      this.loadGroupedFlashcards();
+      await this.loadTopicName();
+    });
   }
 
   getSafeUrl(dataUrl: string | undefined): SafeUrl | null {
@@ -55,10 +55,11 @@ export class FlashcardManager {
     return Object.keys(grouped).sort();
   }
 
-  loadTopicName() {
-    const topic = this.flashcardService
-      .getTopics()
-      .find((t) => t.id === this.topicId);
+  async loadTopicName() {
+    const topics = await this.flashcardService
+      .getTopics();
+
+    const topic = topics.find((t) => t.id === this.topicId);
     this.topicName = topic ? topic.name : this.topicId;
   }
 
@@ -79,8 +80,8 @@ export class FlashcardManager {
     };
   }
 
-  loadFlashcards() {
-    this.flashcards = this.flashcardService.getFlashcards(this.topicId);
+  async loadFlashcards() {
+    this.flashcards = await this.flashcardService.getFlashcards(this.topicId);
     this.loadGroupedFlashcards();
   }
 
@@ -94,7 +95,7 @@ export class FlashcardManager {
     }, {} as { [topicId: string]: FlashcardModel[] });
   }
 
-  saveFlashcard() {
+  async saveFlashcard() {
     const card = {
       ...this.editCard,
       id: this.editCard.id || crypto.randomUUID(),
@@ -107,7 +108,7 @@ export class FlashcardManager {
     }
 
     this.editCard = this.blankCard();
-    this.loadFlashcards();
+    await this.loadFlashcards();
   }
 
   startEdit(card: FlashcardModel) {
@@ -118,11 +119,11 @@ export class FlashcardManager {
     this.editCard = this.blankCard();
   }
 
-  moveCard(card: FlashcardModel) {
+  async moveCard(card: FlashcardModel) {
     this.flashcardService.updateFlashcard(card);
 
     if (card.topicId !== this.topicId) {
-      this.flashcards = this.flashcardService.getFlashcardsForTopic(
+      this.flashcards = await this.flashcardService.getFlashcardsForTopic(
         this.topicId
       );
     }
@@ -158,18 +159,18 @@ export class FlashcardManager {
     this.deleteModal.show();
   }
 
-  confirmDelete(): void {
+  async confirmDelete() {
     if (this.cardToDelete) {
       this.flashcardService.deleteFlashcard(this.cardToDelete.id);
-      this.loadFlashcards();
+      await this.loadFlashcards();
       this.cardToDelete = null;
     }
     this.deleteModal.hide();
   }
 
-  deleteFlashcard(cardId: string) {
+  async deleteFlashcard(cardId: string) {
     this.flashcardService.deleteFlashcard(cardId);
-    this.loadFlashcards();
+    await this.loadFlashcards();
   }
 
   getAllDropListIds(topicId: string): string[] {
