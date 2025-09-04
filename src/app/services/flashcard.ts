@@ -19,7 +19,8 @@ interface MindoricaDB extends DBSchema {
 @Injectable({ providedIn: 'root' })
 export class FlashcardService {
   private dbPromise: Promise<IDBPDatabase<MindoricaDB>>;
-  private topicsKey = 'mindorica_topics';      // legacy localStorage keys
+  // legacy localStorage keys
+  private topicsKey = 'mindorica_topics';      
   private cardsKey = 'mindorica_flashcards';
 
   constructor() {
