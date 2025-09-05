@@ -6,18 +6,22 @@ import { TopicModel } from '../../models/flashcard';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TopicTree } from '../../components/TopicTree/TopicTree';
 
 @Component({
   selector: 'app-topics',
   standalone: true,
   templateUrl: './topic-manager.html',
   styleUrls: ['./topic-manager.scss'],
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule, TopicTree]
 })
 export class TopicManager {
   topics: TopicModel[] = [];
   newTopic: string = '';
   placeholderTopic: string = '';
+  selectedParent: string = '';
+  indentedTopics: { topic: TopicModel; depth: number }[] = [];
+  rootTopics: TopicModel[] = [];
 
   constructor(private flashcardService: FlashcardService) {
     this.loadTopics();
@@ -34,15 +38,24 @@ export class TopicManager {
 
   async loadTopics() {
     this.topics = await this.flashcardService.getTopics();
+    this.rootTopics = this.topics.filter(t => !t.parent);
+    this.indentedTopics = this.getIndentedTopics();
   }
 
-  addTopic() {
+  async addTopic() {
     const trimmed = this.newTopic.trim();
     if (!trimmed) return;
 
-    this.flashcardService.addTopic(trimmed);
+    const topic: TopicModel = {
+      id: crypto.randomUUID(),
+      name: trimmed,
+      parent: this.selectedParent || undefined
+    };
+
+    await this.flashcardService.addTopic(topic);
     this.newTopic = '';
-    this.loadTopics();
+    this.selectedParent = '';
+    await this.loadTopics();
   }
 
   getSubtopics(parentId: string): TopicModel[] {
@@ -51,6 +64,34 @@ export class TopicManager {
 
   getRootTopics(): TopicModel[] {
     return this.topics.filter(t => !t.parent);
+  }
+
+  getIndentedTopics(): { topic: TopicModel; depth: number }[] {
+    const result: { topic: TopicModel; depth: number }[] = [];
+
+    const addWithChildren = (parentId?: string, depth = 0) => {
+      const children = this.topics
+        .filter(t => t.parent === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      for (const child of children) {
+        result.push({ topic: child, depth });
+        addWithChildren(child.id, depth + 1);
+      }
+    };
+
+    addWithChildren(); // start with root topics
+    return result;
+  }
+
+  getDepth(topic: TopicModel): number {
+    let depth = 0;
+    let current = topic;
+    while (current.parent) {
+      depth++;
+      current = this.topics.find(t => t.id === current.parent)!;
+    }
+    return depth;
   }
 
   private sampleTopics: string[] = [

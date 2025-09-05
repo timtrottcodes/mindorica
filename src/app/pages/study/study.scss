@@ -9,6 +9,38 @@
 .topic-pill:nth-child(3) { animation-delay: 0.15s; }
 /* ... repeat or use a loop in SCSS if needed ... */
 
+.lesson-card, .heading-card {
+  min-width: 200px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.section-header {
+  border-bottom: 1px solid #eee;
+}
+
+.heading-card h5 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.lesson-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.streak-pill {
+  padding:0;
+  width: 2em;
+  height: 2em;
+  line-height: 1.9em; /* vertical centering */
+  font-size: 0.85em;
+  margin: 4px;        /* spacing around pills */
+  text-align: center; /* ensure letter is centered */
+  display: inline-block;
+}
+
+
 @keyframes fadeInUp {
   to {
     opacity: 1;

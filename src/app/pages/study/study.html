@@ -1,22 +1,130 @@
-<div class="text-center my-5">
-  <h1>What would you like to learn today?</h1>
-  <p class="text-muted">Choose a topic below to begin studying flashcards.</p>
-</div>
+<div class="container-fluid my-5">
+  <div class="row">
+    <!-- Main Lessons Column -->
+    <div class="col-lg-9">
+      <div class="text-center mb-4">
+        <h1>What would you like to learn today?</h1>
+        <p class="text-muted">
+          Choose a topic below to begin studying flashcards.
+        </p>
+      </div>
 
-<!-- Filter Dropdown -->
-<div class="text-center mb-4">
-  <select class="form-select w-auto d-inline-block" [(ngModel)]="selectedCategory" (change)="applyFilter()">
-    <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-  </select>
-</div>
+      <!-- Lesson Levels -->
+      <div *ngFor="let node of topicTree" class="mb-5">
+        <h4
+          class="section-header text-uppercase fw-bold text-secondary text-center mb-3 mt-5"
+        >
+          {{ node.topic.name }}
+        </h4>
 
-<!-- Animated Topic Pills -->
-<div class="d-flex flex-wrap justify-content-center gap-2 px-3">
-  <button
-    *ngFor="let tc of filteredTopics"
-    class="btn btn-outline-primary rounded-pill px-4 py-2 topic-pill"
-    (click)="startStudy(tc.topic.id)"
-  >
-    {{ tc.topic.id }} ({{ tc.count }})
-  </button>
+        <div class="d-flex flex-wrap gap-3">
+          <ng-container *ngFor="let child of node.children">
+            <ng-container *ngIf="child.children.length; else leafCard">
+              <!-- Intermediate topic (heading) -->
+              <div class="d-flex align-items-start mb-3">
+                <div class="flex-shrink-0 me-3 heading-card">
+                  <h5>{{ child.topic.name }}</h5>
+                </div>
+                <div class="d-flex flex-wrap gap-3">
+                  <ng-container *ngFor="let grandChild of child.children">
+                    <div
+                      class="card shadow-sm lesson-card btn btn-light"
+                      (click)="startStudy(grandChild.topic.id)"
+                    >
+                      <div class="card-body text-center">
+                        <div class="fw-bold mb-2">
+                          {{ grandChild.topic.name }}
+                        </div>
+                        <div class="text-muted small mb-2">
+                          {{ grandChild.count }} flashcards
+                        </div>
+
+                        <div>
+                          <ng-container *ngFor="let i of [0, 1, 2, 3, 4]">
+                            <i
+                              class="fa-star"
+                              [ngClass]="{
+                                'fas text-warning':
+                                  i < getStarsForTopic(grandChild.topic.id),
+                                'far text-muted':
+                                  i >= getStarsForTopic(grandChild.topic.id)
+                              }"
+                            ></i>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #leafCard>
+              <!-- Leaf topic with flashcards -->
+              <div
+                class="card shadow-sm lesson-card btn btn-light"
+                (click)="startStudy(child.topic.id)"
+              >
+                <div class="card-body text-center">
+                  <div class="fw-bold mb-2">{{ child.topic.name }}</div>
+                  <div class="text-muted small mb-2">
+                    {{ child.count }} flashcards
+                  </div>
+
+                  <div>
+                    <ng-container *ngFor="let i of [0, 1, 2, 3, 4]">
+                      <i
+                        class="fa-star"
+                        [ngClass]="{
+                          'fas text-warning':
+                            i < getStarsForTopic(child.topic.id),
+                          'far text-muted':
+                            i >= getStarsForTopic(child.topic.id)
+                        }"
+                      ></i>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Your Stats</h5>
+          <div class="mb-2"><strong>Level:</strong> {{ player.level }}</div>
+          <div class="mb-2"><strong>Experience:</strong> {{ player.exp }}</div>
+          <div class="mb-2"><strong>Words:</strong> {{ player.words }}</div>
+          <div class="mb-2">
+            <strong>Streak:</strong> {{ player.streak }} day(s)
+          </div>
+          <div class="mb-2">
+            <strong>Longest Streak:</strong> {{ player.longestStreak }} day(s)
+          </div>
+
+          <!-- Weekly streak bar -->
+          <div class="d-flex flex-wrap justify-content-center mt-3">
+            <div
+              *ngFor="let day of weekDays; let i = index"
+              class="text-center"
+            >
+              <span
+                class="badge rounded-pill streak-pill"
+                [ngClass]="{
+                  'bg-success': day.checked && i !== todayIndex,
+                  'bg-primary': i === todayIndex,
+                  'bg-secondary': !day.checked && i !== todayIndex
+                }"
+              >{{ day.label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

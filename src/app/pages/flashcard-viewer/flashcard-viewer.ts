@@ -5,6 +5,7 @@ import { FlashcardModel } from '../../models/flashcard';
 import { FlashcardComponent } from '../../components/flashcard/flashcard';
 import { CommonModule } from '@angular/common';
 import { AppRoutes } from '../../app-routing';
+import { from } from 'rxjs';
 
 @Component({
   selector: 'app-flashcard-viewer',
@@ -15,6 +16,7 @@ import { AppRoutes } from '../../app-routing';
 })
 export class FlashcardViewer implements OnInit {
   topicId!: string;
+  topicName: string = "";
   cards: FlashcardModel[] = [];
   currentIndex = 0;
   showBack = false;
@@ -45,16 +47,21 @@ export class FlashcardViewer implements OnInit {
     this.topicId = decodeURIComponent(
       this.route.snapshot.paramMap.get('topicId') || ''
     );
-    this.getFlashcards();
+
+    from(this.flashcardService.getFullTopicPath(this.topicId)).subscribe((topicName: string) => {
+      this.topicName = topicName;
+    });
+    from(this.getFlashcards()).subscribe((flashCards) => {
+      this.cards = flashCards;
+    });
   }
 
-  async getFlashcards() {
+  async getFlashcards(): Promise<FlashcardModel[]> {
     const raw = await this.flashcardService.getFlashcardsForTopic(this.topicId);
 
     // If less than or equal to 15, just shuffle and return
     if (raw.length <= 15) {
-      this.cards = this.shuffle([...raw]);
-      return;
+      return this.shuffle([...raw]);
     }
 
     const now = new Date().toISOString();
@@ -73,7 +80,7 @@ export class FlashcardViewer implements OnInit {
     const selected =
       dueCards.length >= 15 ? dueCards.slice(0, 15) : sorted.slice(0, 15);
 
-    this.cards = this.shuffle(selected);
+    return this.shuffle(selected);
   }
 
   get currentCard(): FlashcardModel | undefined {
@@ -139,7 +146,7 @@ export class FlashcardViewer implements OnInit {
     }, 1500);
   }
 
-  advance(): void {
+  async advance() {
     this.shuffledOptions = undefined;
     this.selectedOption = '';
     this.currentIndex++;
@@ -161,10 +168,17 @@ export class FlashcardViewer implements OnInit {
           : this.scorePercent >= 70
           ? 'Nice job! Keep reviewing for mastery. 💪'
           : 'Keep practicing, you’re improving every time! 💡';
+
+      await this.flashcardService.logTopicScore(
+        this.topicId,
+        total,
+        this.averageRating,
+        this.scorePercent
+      );
     }
   }
 
-  restart() {
+  async restart() {
     this.currentIndex = 0;
     this.reviewingDone = false;
     this.studyHistory = [];
@@ -173,7 +187,7 @@ export class FlashcardViewer implements OnInit {
     this.scorePercent = 0;
     this.cardsToReview = [];
     this.finalMessage = '';
-    this.getFlashcards();
+    this.cards = await this.getFlashcards();
   }
 
   topics() {
