@@ -26,6 +26,7 @@ export class FlashcardManager {
   groupedFlashcards: { [topicId: string]: FlashcardModel[] } = {};
   draggedCard: FlashcardModel | null = null;
   dragOverTarget: string | null = null;
+  topicNameMap: Record<string, string> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -43,7 +44,8 @@ export class FlashcardManager {
       this.editCard = this.blankCard();
 
       this.loadGroupedFlashcards();
-      await this.loadTopicName();
+      await this.loadTopicNames(this.allTopics.map(t => t.id));
+      this.topicName = this.topicNameMap[this.topicId];
     });
   }
 
@@ -55,12 +57,10 @@ export class FlashcardManager {
     return Object.keys(grouped).sort();
   }
 
-  async loadTopicName() {
-    const topics = await this.flashcardService
-      .getTopics();
-
-    const topic = topics.find((t) => t.id === this.topicId);
-    this.topicName = topic ? topic.name : this.topicId;
+  async loadTopicNames(topicIds: string[]) {
+    for (const id of topicIds) {
+      this.topicNameMap[id] = await this.flashcardService.getFullTopicPath(id);
+    }
   }
 
   blankCard(): FlashcardModel {

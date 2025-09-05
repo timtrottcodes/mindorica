@@ -21,38 +21,40 @@
     No topics created yet. Get started by creating a new topic or import some!
   </div>
 
+  <div class="mx-auto" style="max-width: 650px">
+    <form (submit)="addTopic(); $event.preventDefault()" class="mb-3" style="max-width: 600px;">
+      
+      <div class="d-flex justify-content-center">
+        <div class="mb-2 mx-2">
+          <input
+            class="form-control"
+            [(ngModel)]="newTopic"
+            name="topic"
+            [placeholder]="'e.g. ' + placeholderTopic"
+            required
+          />
+        </div>
 
-  <div class="mx-auto" style="max-width: 400px">
-    <form
-      (submit)="addTopic(); $event.preventDefault()"
-      class="mb-3 d-flex"
-      style="max-width: 600px"
-    >
-      <input
-        class="form-control me-2"
-        [(ngModel)]="newTopic"
-        name="topic"
-        [placeholder]="'e.g. ' + placeholderTopic"
-        required
-      />
-      <button class="btn btn-primary" type="submit" style="min-width: 120px">
+        <div class="mb-3 mx-2">
+          <select class="form-select" [(ngModel)]="selectedParent" name="parent">
+            <option value="">-- No Parent (Root Topic) --</option>
+            <ng-container *ngFor="let item of indentedTopics">
+              <option [value]="item.topic.id">
+                {{ '—'.repeat(item.depth) }} {{ item.topic.name }}
+              </option>
+            </ng-container>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary w-100" type="submit">
         Add Topic
       </button>
     </form>
   </div>
 
   <ul>
-    <ng-container *ngFor="let topic of getRootTopics()">
-      <li>
-        <a [routerLink]="['/flashcard-manager', topic.id]">{{ topic.id }}</a>
-        <ul>
-          <ng-container *ngFor="let sub of getSubtopics(topic.id)">
-            <li>
-              <a [routerLink]="['/flashcard-manager', sub.id]">{{ sub.id }}</a>
-            </li>
-          </ng-container>
-        </ul>
-      </li>
+    <ng-container *ngFor="let topic of rootTopics">
+      <app-topic-tree [topic]="topic" [topics]="topics"></app-topic-tree>
     </ng-container>
   </ul>
 </div>

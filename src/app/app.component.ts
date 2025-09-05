@@ -29,7 +29,7 @@ import { CommonModule } from '@angular/common';
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="[AppRoutes.Home]">Home</a>
+              <a class="nav-link" [routerLink]="[AppRoutes.StudyViewer]">Study</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" [routerLink]="[AppRoutes.TopicManager]">Topic Admin</a>

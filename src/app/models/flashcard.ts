@@ -26,3 +26,12 @@ interface StudyStateModel {
   currentIndex: number;
   history: { card: FlashcardModel; rating: number; date: Date }[];
 }
+
+export interface TopicScore {
+  id: string;          // unique id for this entry
+  topicId: string;     // the topic this score belongs to
+  date: number;        // timestamp of completion
+  totalCards: number;  // total cards in the session
+  averageRating: number; // average rating for this session (0-4)
+  scorePercent: number;  // percentage score (0-100)
+}

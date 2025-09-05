@@ -181,7 +181,7 @@
 
   <div class="row g-3">
     <div *ngFor="let topicId of getTopicIds(groupedFlashcards)" class="mb-4">
-      <h5 class="border-bottom pb-1">{{ topicId }}</h5>
+      <h5 class="border-bottom pb-1">{{ topicNameMap[topicId] }}</h5>
 
       <ul
         class="list-group"
@@ -245,7 +245,7 @@
                 (ngModelChange)="moveCard(card)"
               >
                 <option *ngFor="let topic of allTopics" [value]="topic.id">
-                  {{ topic.id }}
+                  {{ topic.name }}
                 </option>
               </select>
               <button
