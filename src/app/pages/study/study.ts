@@ -113,12 +113,16 @@ export class Study implements OnInit {
 
   buildTopicTree(allTopics: TopicModel[], topicCounts: Map<string, number>): TopicNode[] {
     const nodeMap = new Map<string, TopicNode>();
-
+  
     // Step 1: create a node for every topic
     allTopics.forEach(t => {
-      nodeMap.set(t.id, { topic: t, count: topicCounts.get(t.id) || 0, children: [] });
+      nodeMap.set(t.id, {
+        topic: t,
+        count: topicCounts.get(t.id) || 0,
+        children: []
+      });
     });
-
+  
     // Step 2: attach nodes to parents
     nodeMap.forEach(node => {
       if (node.topic.parent) {
@@ -128,7 +132,7 @@ export class Study implements OnInit {
         }
       }
     });
-
+  
     // Step 3: roots are nodes without a parent or whose parent is missing
     const roots: TopicNode[] = [];
     nodeMap.forEach(node => {
@@ -136,16 +140,28 @@ export class Study implements OnInit {
         roots.push(node);
       }
     });
-
+  
+    // ✅ Step 4: for root topics with flashcards, add a self node
+    roots.forEach(root => {
+      if (root.count > 0) {
+        root.children.unshift({
+          topic: { ...root.topic, id: root.topic.id + '-self' }, // avoid collision
+          count: root.count,
+          children: []
+        });
+      }
+    });
+  
     // sort children alphabetically (TODO add sequence field)
     const sortChildren = (nodes: TopicNode[]) => {
       nodes.sort((a, b) => a.topic.name.localeCompare(b.topic.name));
       nodes.forEach(n => sortChildren(n.children));
     };
     sortChildren(roots);
-
+  
     return roots;
   }
+  
 
   getStarsForTopic(topicId: string): number {
     return this.topicStars.get(topicId) ?? 0;
