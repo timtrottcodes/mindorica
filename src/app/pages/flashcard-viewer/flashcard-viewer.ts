@@ -102,7 +102,13 @@ export class FlashcardViewer implements OnInit {
   }
 
   shuffleArray<T>(array: T[]): T[] {
-    return [...array].sort(() => Math.random() - 0.5);
+    // Fisher-Yates shuffle algorithm
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   flip(): void {
@@ -195,7 +201,13 @@ export class FlashcardViewer implements OnInit {
   }
 
   shuffle(array: FlashcardModel[]): FlashcardModel[] {
-    return array.sort(() => Math.random() - 0.5);
+    // Fisher-Yates shuffle algorithm for proper randomization
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   getFeedback(rating: number): string {

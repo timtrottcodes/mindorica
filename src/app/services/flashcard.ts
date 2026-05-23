@@ -113,10 +113,17 @@ export class FlashcardService {
   async getFullTopicPath(topicId: string): Promise<string> {
     const db = await this.dbPromise;
     const parts: string[] = [];
+    const visited = new Set<string>();
 
     let currentId: string | undefined = topicId;
 
     while (currentId) {
+      if (visited.has(currentId)) {
+        console.error('Circular reference detected in topic hierarchy:', currentId);
+        break;
+      }
+      visited.add(currentId);
+
       const topic: TopicModel | undefined = await db.get('topics', currentId);
       if (!topic) break; // safety check
 
@@ -217,7 +224,7 @@ export class FlashcardService {
     const db = await this.dbPromise;
 
     const newScore: TopicScore = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       topicId,
       date: Date.now(),
       totalCards,
@@ -386,9 +393,5 @@ export class FlashcardService {
     }
 
     return weekDays;
-  }
-
-  private generateId(): string {
-    return '_' + Math.random().toString(36).substr(2, 9);
   }
 }

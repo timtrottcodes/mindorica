@@ -96,15 +96,40 @@ export class FlashcardManager {
   }
 
   async saveFlashcard() {
+    const maxLength = 5000;
+    if (!this.editCard.front?.trim()) {
+      alert('Front of card cannot be empty.');
+      return;
+    }
+    if (!this.editCard.back?.trim()) {
+      alert('Back of card cannot be empty.');
+      return;
+    }
+    if (this.editCard.front.length > maxLength) {
+      alert(`Front text too long. Maximum ${maxLength} characters.`);
+      return;
+    }
+    if (this.editCard.back.length > maxLength) {
+      alert(`Back text too long. Maximum ${maxLength} characters.`);
+      return;
+    }
+    if (this.editCard.notes && this.editCard.notes.length > maxLength) {
+      alert(`Notes too long. Maximum ${maxLength} characters.`);
+      return;
+    }
+
     const card = {
       ...this.editCard,
       id: this.editCard.id || crypto.randomUUID(),
+      front: this.editCard.front.trim(),
+      back: this.editCard.back.trim(),
+      notes: this.editCard.notes?.trim(),
     };
 
     if (this.editCard.id) {
-      this.flashcardService.updateFlashcard(card);
+      await this.flashcardService.updateFlashcard(card);
     } else {
-      this.flashcardService.addFlashcard(card);
+      await this.flashcardService.addFlashcard(card);
     }
 
     this.editCard = this.blankCard();
@@ -120,7 +145,7 @@ export class FlashcardManager {
   }
 
   async moveCard(card: FlashcardModel) {
-    this.flashcardService.updateFlashcard(card);
+    await this.flashcardService.updateFlashcard(card);
 
     if (card.topicId !== this.topicId) {
       this.flashcards = await this.flashcardService.getFlashcardsForTopic(
@@ -133,6 +158,23 @@ export class FlashcardManager {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
+    // File size validation (max 5MB for images, 10MB for audio)
+    const maxSize = type === 'image' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      const sizeMB = (maxSize / (1024 * 1024)).toFixed(0);
+      alert(`File too large. Maximum size for ${type} is ${sizeMB}MB.`);
+      return;
+    }
+
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
+    const validTypes = type === 'image' ? validImageTypes : validAudioTypes;
+
+    if (!validTypes.includes(file.type)) {
+      alert(`Invalid file type. Please upload a valid ${type} file.`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (type === 'image') {
@@ -140,6 +182,9 @@ export class FlashcardManager {
       } else if (type === 'audio') {
         this.editCard.audioUrl = reader.result as string;
       }
+    };
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
     };
     reader.readAsDataURL(file);
   }
@@ -149,7 +194,7 @@ export class FlashcardManager {
       this.editCard.imageUrl = undefined;
       this.editCard.imageBack = false;
     } else if (type === 'audio') {
-      this.editCard.imageUrl = undefined;
+      this.editCard.audioUrl = undefined;
       this.editCard.audioBack = false;
     }
   }
@@ -161,7 +206,7 @@ export class FlashcardManager {
 
   async confirmDelete() {
     if (this.cardToDelete) {
-      this.flashcardService.deleteFlashcard(this.cardToDelete.id);
+      await this.flashcardService.deleteFlashcard(this.cardToDelete.id);
       await this.loadFlashcards();
       this.cardToDelete = null;
     }
@@ -169,7 +214,7 @@ export class FlashcardManager {
   }
 
   async deleteFlashcard(cardId: string) {
-    this.flashcardService.deleteFlashcard(cardId);
+    await this.flashcardService.deleteFlashcard(cardId);
     await this.loadFlashcards();
   }
 

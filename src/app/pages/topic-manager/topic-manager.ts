@@ -46,6 +46,23 @@ export class TopicManager {
     const trimmed = this.newTopic.trim();
     if (!trimmed) return;
 
+    // Input validation
+    const maxLength = 100;
+    if (trimmed.length > maxLength) {
+      alert(`Topic name too long. Maximum ${maxLength} characters.`);
+      return;
+    }
+
+    // Check for duplicate names at the same level
+    const siblings = this.selectedParent
+      ? this.topics.filter(t => t.parent === this.selectedParent)
+      : this.topics.filter(t => !t.parent);
+
+    if (siblings.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      alert('A topic with this name already exists at this level.');
+      return;
+    }
+
     const topic: TopicModel = {
       id: crypto.randomUUID(),
       name: trimmed,
@@ -87,9 +104,19 @@ export class TopicManager {
   getDepth(topic: TopicModel): number {
     let depth = 0;
     let current = topic;
+    const visited = new Set<string>();
+
     while (current.parent) {
+      if (visited.has(current.id)) {
+        console.error('Circular reference detected in topic hierarchy:', current.id);
+        return depth;
+      }
+      visited.add(current.id);
+
       depth++;
-      current = this.topics.find(t => t.id === current.parent)!;
+      const parent = this.topics.find(t => t.id === current.parent);
+      if (!parent) break;
+      current = parent;
     }
     return depth;
   }

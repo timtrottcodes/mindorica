@@ -1,8 +1,9 @@
 // src/app/app.component.ts
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, Routes, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AppRoutes } from "../app/app-routing"
 import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -64,14 +65,15 @@ import { CommonModule } from '@angular/common';
     </footer>
   `,
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   AppRoutes = AppRoutes;
   isHomePage = false;
   darkModeEnabled = false;
+  private routerSubscription?: Subscription;
 
   constructor(private router: Router) {
     // Route-based home flag
-    this.router.events
+    this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.isHomePage = event.urlAfterRedirects === '/' || event.urlAfterRedirects === '/home';
@@ -82,6 +84,10 @@ export class AppComponent {
     if (storedTheme === 'dark') {
       this.enableDarkMode();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.routerSubscription?.unsubscribe();
   }
 
   toggleDarkMode(): void {

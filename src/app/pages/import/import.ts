@@ -56,6 +56,15 @@ export class Import {
     if (!input.files?.length) return;
 
     const file = input.files[0];
+
+    // File size validation (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('File too large. Maximum size is 50MB.');
+      input.value = '';
+      return;
+    }
+
     this.selectedFile = file;
 
     const isZip = file.type === 'application/zip' || file.name.endsWith('.zip');
@@ -65,6 +74,7 @@ export class Import {
     if (!isZip && !isJson) {
       alert('Unsupported file type. Please upload a .json or .zip file.');
       this.selectedFile = null;
+      input.value = '';
       return;
     }
 
@@ -120,6 +130,37 @@ export class Import {
     this.success("Flashcards exported");
   }
 
+  private validateImportData(data: any): data is ExportData {
+    // Validate the structure of imported data
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data format: not an object');
+    }
+
+    if (!Array.isArray(data.topics)) {
+      throw new Error('Invalid data format: topics must be an array');
+    }
+
+    if (!Array.isArray(data.cards)) {
+      throw new Error('Invalid data format: cards must be an array');
+    }
+
+    // Validate topic structure
+    for (const topic of data.topics) {
+      if (!topic.id || !topic.name || typeof topic.id !== 'string' || typeof topic.name !== 'string') {
+        throw new Error('Invalid topic structure: missing or invalid id/name');
+      }
+    }
+
+    // Validate card structure
+    for (const card of data.cards) {
+      if (!card.id || !card.front || !card.back || !card.topicId) {
+        throw new Error('Invalid card structure: missing required fields');
+      }
+    }
+
+    return true;
+  }
+
   async importData(file: File | null): Promise<void> {
     if (!file) {
       alert('No file selected. Please upload a .json or .zip file.');
@@ -135,19 +176,27 @@ export class Import {
     }
 
     try {
-      let importPayload: ExportData;
+      let importPayload: any;
       let mediaAssets: { [url: string]: string } = {};
 
       if (isJson) {
         const text = await file.text();
-        importPayload = JSON.parse(text);
+        try {
+          importPayload = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Invalid JSON format');
+        }
       } else {
         const zip = await JSZip.loadAsync(file);
         const jsonFile = zip.file(/\.json$/i)?.[0];
         if (!jsonFile) throw new Error('No JSON file found in ZIP');
 
         const jsonData = await jsonFile.async('string');
-        importPayload = JSON.parse(jsonData);
+        try {
+          importPayload = JSON.parse(jsonData);
+        } catch (e) {
+          throw new Error('Invalid JSON format in ZIP file');
+        }
 
         for (const key in zip.files) {
           if (
@@ -162,7 +211,7 @@ export class Import {
         }
 
         // Patch imported cards with embedded base64 media
-        importPayload.cards = importPayload.cards.map((card) => {
+        importPayload.cards = importPayload.cards.map((card: any) => {
           const imageUrl =
             card.imageUrl && mediaAssets[card.imageUrl]
               ? mediaAssets[card.imageUrl]
@@ -181,14 +230,17 @@ export class Import {
         });
       }
 
+      // Validate imported data structure
+      this.validateImportData(importPayload);
+
       // Conflict detection
       const existingTopicIds = new Set(this.allTopics.map((t) => t.id));
       const existingCardIds = new Set(this.flashcards.map((c) => c.id));
 
-      const conflictingTopics = importPayload.topics.filter((t) =>
+      const conflictingTopics = importPayload.topics.filter((t: any) =>
         existingTopicIds.has(t.id)
       );
-      const conflictingCards = importPayload.cards.filter((c) =>
+      const conflictingCards = importPayload.cards.filter((c: any) =>
         existingCardIds.has(c.id)
       );
 
@@ -217,13 +269,13 @@ Do you want to overwrite these?
         // Merge
         const mergedTopics = [
           ...this.allTopics.filter(
-            (t) => !conflictingTopics.find((ct) => ct.id === t.id)
+            (t) => !conflictingTopics.find((ct: any) => ct.id === t.id)
           ),
           ...importPayload.topics,
         ];
         const mergedCards = [
           ...this.flashcards.filter(
-            (c) => !conflictingCards.find((cc) => cc.id === c.id)
+            (c) => !conflictingCards.find((cc: any) => cc.id === c.id)
           ),
           ...importPayload.cards,
         ];
@@ -466,75 +518,75 @@ Do you want to overwrite these?
       'data:audio/mpeg;base64,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'
 
     const demoQuizTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Quizzes',
     };
     const demoGNTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'General Knowledge',
       parent: demoQuizTopic.id
     };
     const demoSTTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Star Trek',
       parent: demoQuizTopic.id
     };
     const demoDETopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'German',
     };
     const demoDEGeneralTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'General',
       parent: demoDETopic.id
     };
 
     const demoBGTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Bulgarian',
     };
     const demoBGBasicsTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Basics',
       parent: demoBGTopic.id
     };
     const demoBGNumbersTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Numbers',
       parent: demoBGBasicsTopic.id
     };
     const demoGBAlphabetTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Alphabet',
       parent: demoBGBasicsTopic.id
     };
     const demoBGMeetTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Meeting People',
       parent: demoBGTopic.id
     };
     const demoGBGreetingTopic: TopicModel = {
-      id: this.generateId(),
+      id: crypto.randomUUID(),
       name: 'Greetings',
       parent: demoBGMeetTopic.id
     };
 
     const demoCards: FlashcardModel[] = [
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'What is the capital of France?',
         back: 'Paris',
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What is the capital of France?',
             back: 'London',
             topicId: demoGNTopic.id,
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What is the capital of France?',
             back: 'Berlin',
             topicId: demoGNTopic.id,
@@ -543,20 +595,20 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'What planet is known as the Red Planet?',
         back: 'Mars',
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What planet is known as the Red Planet?',
             back: 'Jupiter',
             topicId: demoGNTopic.id,
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What planet is known as the Red Planet?',
             back: 'Venus',
             topicId: demoGNTopic.id,
@@ -565,7 +617,7 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'Which country has this flag?',
         back: 'Japan',
@@ -573,14 +625,14 @@ Do you want to overwrite these?
         imageBack: false,
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'Which country has this flag?',
             back: 'South Korea',
             topicId: demoGNTopic.id,
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'Which country has this flag?',
             back: 'China',
             topicId: demoGNTopic.id,
@@ -589,7 +641,7 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'What animal makes this sound?',
         back: 'Cow',
@@ -597,14 +649,14 @@ Do you want to overwrite these?
         audioBack: false,
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What animal makes this sound?',
             back: 'Sheep',
             topicId: demoGNTopic.id,
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What animal makes this sound?',
             back: 'Horse',
             topicId: demoGNTopic.id,
@@ -613,20 +665,20 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'Who wrote "Romeo and Juliet"?',
         back: 'William Shakespeare',
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'Who wrote "Romeo and Juliet"?',
             back: 'Charles Dickens',
             topicId: demoGNTopic.id,
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'Who wrote "Romeo and Juliet"?',
             back: 'Jane Austen',
             topicId: demoGNTopic.id,
@@ -635,7 +687,7 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoGNTopic.id,
         front: 'What is the main ingredient in guacamole?',
         back: 'Avocado',
@@ -643,7 +695,7 @@ Do you want to overwrite these?
         imageBack: true,
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What is the main ingredient in guacamole?',
             back: 'Tomato',
             imageUrl: base64Tomato,
@@ -652,7 +704,7 @@ Do you want to overwrite these?
             options: [],
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             front: 'What is the main ingredient in guacamole?',
             back: 'Bread',
             imageUrl: base64Bread,
@@ -663,20 +715,20 @@ Do you want to overwrite these?
         ],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "Who was the captain of the USS Enterprise in the original Star Trek series?",
         back: "James T. Kirk",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Who was the captain of the USS Enterprise in the original Star Trek series?",
             back: "Jean-Luc Picard",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Who was the captain of the USS Enterprise in the original Star Trek series?",
             back: "Benjamin Sisko",
@@ -685,20 +737,20 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "What is Spock’s home planet?",
         back: "Vulcan",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What is Spock’s home planet?",
             back: "Romulus",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What is Spock’s home planet?",
             back: "Kronos",
@@ -707,20 +759,20 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "Which species is known for the phrase 'Resistance is futile'?",
         back: "The Borg",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Which species is known for the phrase 'Resistance is futile'?",
             back: "The Klingons",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Which species is known for the phrase 'Resistance is futile'?",
             back: "The Ferengi",
@@ -729,20 +781,20 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "What is the name of the first warp-capable human ship?",
         back: "The Phoenix",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What is the name of the first warp-capable human ship?",
             back: "The Enterprise",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What is the name of the first warp-capable human ship?",
             back: "The Defiant",
@@ -751,20 +803,20 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "What rank was Jean-Luc Picard when he commanded the USS Enterprise-D?",
         back: "Captain",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What rank was Jean-Luc Picard when he commanded the USS Enterprise-D?",
             back: "Commander",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "What rank was Jean-Luc Picard when he commanded the USS Enterprise-D?",
             back: "Admiral",
@@ -773,20 +825,20 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoSTTopic.id,
         front: "Which Star Trek series introduced the character of Captain Benjamin Sisko?",
         back: "Deep Space Nine",
         options: [
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Which Star Trek series introduced the character of Captain Benjamin Sisko?",
             back: "Voyager",
             options: []
           },
           {
-            id: this.generateId(),
+            id: crypto.randomUUID(),
             topicId: demoSTTopic.id,
             front: "Which Star Trek series introduced the character of Captain Benjamin Sisko?",
             back: "Enterprise",
@@ -795,7 +847,7 @@ Do you want to overwrite these?
         ]
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'How do you say "Hello, How are you?" in German?',
         back: 'Hallo, wie geht es dir?',
@@ -804,42 +856,42 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'What does "Danke" mean?',
         back: 'Thank you',
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'What color is "Blau" in English?',
         back: 'Blue',
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'How do you say "One" in German?',
         back: 'Eins',
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'What is the German word for "cat"?',
         back: 'Katze',
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         topicId: demoDEGeneralTopic.id,
         front: 'How do you say "Goodbye" in German?',
         back: 'Auf Wiedersehen',
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "А",
         back: "A (ah)",
         topicId: demoGBAlphabetTopic.id,
@@ -848,7 +900,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Б",
         back: "B",
         topicId: demoGBAlphabetTopic.id,
@@ -857,7 +909,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "В",
         back: "V",
         topicId: demoGBAlphabetTopic.id,
@@ -866,7 +918,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Г",
         back: "G",
         topicId: demoGBAlphabetTopic.id,
@@ -875,7 +927,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Д",
         back: "D",
         topicId: demoGBAlphabetTopic.id,
@@ -884,7 +936,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Е",
         back: "E (eh)",
         topicId: demoGBAlphabetTopic.id,
@@ -893,7 +945,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Ж",
         back: "Zh",
         topicId: demoGBAlphabetTopic.id,
@@ -902,7 +954,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Едно",
         back: "One",
         topicId: demoBGNumbersTopic.id,
@@ -911,7 +963,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Две",
         back: "Two",
         topicId: demoBGNumbersTopic.id,
@@ -920,7 +972,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Три",
         back: "Three",
         topicId: demoBGNumbersTopic.id,
@@ -929,7 +981,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Четири",
         back: "Four",
         topicId: demoBGNumbersTopic.id,
@@ -938,7 +990,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Пет",
         back: "Five",
         topicId: demoBGNumbersTopic.id,
@@ -947,7 +999,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Шест",
         back: "Six",
         topicId: demoBGNumbersTopic.id,
@@ -956,7 +1008,7 @@ Do you want to overwrite these?
         options: [],
       },
       {
-        id: this.generateId(),
+        id: crypto.randomUUID(),
         front: "Здравей",
         back: "Hello",
         topicId: demoGBGreetingTopic.id,
@@ -973,9 +1025,6 @@ Do you want to overwrite these?
     location.reload(); // Refresh to reflect changes
   }
 
-  private generateId(): string {
-    return '_' + Math.random().toString(36).substr(2, 9);
-  }
 }
 
 interface ExportData {
