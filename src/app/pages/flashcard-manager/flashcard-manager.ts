@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { Modal } from 'bootstrap';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   selector: 'app-flashcard-manager',
@@ -31,7 +32,8 @@ export class FlashcardManager {
   constructor(
     private route: ActivatedRoute,
     private flashcardService: FlashcardService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -98,23 +100,23 @@ export class FlashcardManager {
   async saveFlashcard() {
     const maxLength = 5000;
     if (!this.editCard.front?.trim()) {
-      alert('Front of card cannot be empty.');
+      await this.modalService.warning('Front of card cannot be empty.');
       return;
     }
     if (!this.editCard.back?.trim()) {
-      alert('Back of card cannot be empty.');
+      await this.modalService.warning('Back of card cannot be empty.');
       return;
     }
     if (this.editCard.front.length > maxLength) {
-      alert(`Front text too long. Maximum ${maxLength} characters.`);
+      await this.modalService.warning(`Front text too long. Maximum ${maxLength} characters.`);
       return;
     }
     if (this.editCard.back.length > maxLength) {
-      alert(`Back text too long. Maximum ${maxLength} characters.`);
+      await this.modalService.warning(`Back text too long. Maximum ${maxLength} characters.`);
       return;
     }
     if (this.editCard.notes && this.editCard.notes.length > maxLength) {
-      alert(`Notes too long. Maximum ${maxLength} characters.`);
+      await this.modalService.warning(`Notes too long. Maximum ${maxLength} characters.`);
       return;
     }
 
@@ -162,7 +164,7 @@ export class FlashcardManager {
     const maxSize = type === 'image' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
       const sizeMB = (maxSize / (1024 * 1024)).toFixed(0);
-      alert(`File too large. Maximum size for ${type} is ${sizeMB}MB.`);
+      this.modalService.warning(`File too large. Maximum size for ${type} is ${sizeMB}MB.`);
       return;
     }
 
@@ -171,7 +173,7 @@ export class FlashcardManager {
     const validTypes = type === 'image' ? validImageTypes : validAudioTypes;
 
     if (!validTypes.includes(file.type)) {
-      alert(`Invalid file type. Please upload a valid ${type} file.`);
+      this.modalService.warning(`Invalid file type. Please upload a valid ${type} file.`);
       return;
     }
 
@@ -184,7 +186,7 @@ export class FlashcardManager {
       }
     };
     reader.onerror = () => {
-      alert('Error reading file. Please try again.');
+      this.modalService.error('Error reading file. Please try again.');
     };
     reader.readAsDataURL(file);
   }
@@ -247,7 +249,7 @@ export class FlashcardManager {
       parentCard.options = [];
     }
     if (parentCard.options.length >= 2) {
-      alert('Max 2 options allowed');
+      this.modalService.warning('Max 2 options allowed');
       return;
     }
 

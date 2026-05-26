@@ -75,37 +75,6 @@
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title" [ngClass]="{ 'text-muted': !enableAnkiImport }">Import Anki Deck (.apkg)</h5>
-      <p class="card-text" [ngClass]="{ 'text-muted': !enableAnkiImport }">This feature is experimental. Use with caution. Importing of Anki Decks only works in Node servers. See documentation.</p>
-
-      <form (submit)="onAnkiImportSubmit($event)">
-        <div class="mb-3">
-          <label for="deckFile" class="form-label">Select .apkg File</label>
-          <input
-            type="file"
-            class="form-control"
-            id="deckFile"
-            accept=".apkg"
-            (change)="onAnkiFileSelected($event)"
-            [disabled]="!enableAnkiImport"
-          />
-        </div>
-
-        <div class="mb-3">
-          <label for="topicSelect" class="form-label" [ngClass]="{ 'text-muted': !enableAnkiImport }">Assign to Topic</label>
-          <select class="form-select" id="topicSelect" [(ngModel)]="selectedAnkiTopicId" name="topicSelect" [disabled]="!enableAnkiImport">
-            <option [ngValue]="null">Select topic</option>
-            <option *ngFor="let topic of allTopics" [value]="topic.id">{{ topic.name }}</option>
-          </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary" [disabled]="!enableAnkiImport">Import</button>
-      </form>
-    </div>
-  </div>
-
   <div class="card border-danger mt-4">
     <div class="card-body">
       <h5 class="card-title text-danger">Load Demo Data</h5>

@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TopicTree } from '../../components/TopicTree/TopicTree';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   selector: 'app-topics',
@@ -23,7 +24,10 @@ export class TopicManager {
   indentedTopics: { topic: TopicModel; depth: number }[] = [];
   rootTopics: TopicModel[] = [];
 
-  constructor(private flashcardService: FlashcardService) {
+  constructor(
+    private flashcardService: FlashcardService,
+    private modalService: ModalService
+  ) {
     this.loadTopics();
   }
 
@@ -49,7 +53,7 @@ export class TopicManager {
     // Input validation
     const maxLength = 100;
     if (trimmed.length > maxLength) {
-      alert(`Topic name too long. Maximum ${maxLength} characters.`);
+      this.modalService.warning(`Topic name too long. Maximum ${maxLength} characters.`);
       return;
     }
 
@@ -59,7 +63,7 @@ export class TopicManager {
       : this.topics.filter(t => !t.parent);
 
     if (siblings.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
-      alert('A topic with this name already exists at this level.');
+      this.modalService.warning('A topic with this name already exists at this level.');
       return;
     }
 

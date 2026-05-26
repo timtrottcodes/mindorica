@@ -5,11 +5,12 @@ import { AppRoutes } from "../app/app-routing"
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { ModalComponent } from './components/modal/modal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterModule, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterModule, CommonModule, ModalComponent],
   template: `
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
@@ -63,6 +64,8 @@ import { CommonModule } from '@angular/common';
     <footer class="text-muted text-center py-3 mt-auto">
       Mindorica &copy; 2025 <a href="https://github.com/timtrottcodes">TimTrottCodes</a> — All rights reserved.
     </footer>
+
+    <app-modal></app-modal>
   `,
 })
 export class AppComponent implements OnDestroy {

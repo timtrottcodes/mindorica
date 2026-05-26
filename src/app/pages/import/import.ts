@@ -7,8 +7,8 @@ import { FormsModule } from '@angular/forms';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { from } from 'rxjs';
-//import initSqlJs from 'sql.js';
 import { environment } from '../../../environments/environment';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   selector: 'app-import',
@@ -30,7 +30,8 @@ export class Import {
 
   constructor(
     private route: ActivatedRoute,
-    private flashcardService: FlashcardService
+    private flashcardService: FlashcardService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -60,7 +61,7 @@ export class Import {
     // File size validation (max 50MB)
     const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert('File too large. Maximum size is 50MB.');
+      this.modalService.warning('File too large. Maximum size is 50MB.');
       input.value = '';
       return;
     }
@@ -72,7 +73,7 @@ export class Import {
       file.type === 'application/json' || file.name.endsWith('.json');
 
     if (!isZip && !isJson) {
-      alert('Unsupported file type. Please upload a .json or .zip file.');
+      this.modalService.warning('Unsupported file type. Please upload a .json or .zip file.');
       this.selectedFile = null;
       input.value = '';
       return;
@@ -163,7 +164,7 @@ export class Import {
 
   async importData(file: File | null): Promise<void> {
     if (!file) {
-      alert('No file selected. Please upload a .json or .zip file.');
+      this.modalService.warning('No file selected. Please upload a .json or .zip file.');
       return;
     }
 
@@ -171,7 +172,7 @@ export class Import {
     const isJson = file.name.endsWith('.json');
 
     if (!isZip && !isJson) {
-      alert('Invalid file format. Please upload a .json or .zip file.');
+      this.modalService.warning('Invalid file format. Please upload a .json or .zip file.');
       return;
     }
 
@@ -257,7 +258,7 @@ Conflicts detected:
 Do you want to overwrite these?
       `.trim();
 
-        const confirmed = confirm(confirmMsg);
+        const confirmed = await this.modalService.confirm(confirmMsg, 'Conflicts Detected');
         if (!confirmed) return;
       }
 
@@ -288,10 +289,10 @@ Do you want to overwrite these?
         this.allTopics,
         this.flashcards
       );
-      this.success("Import successful");
+      await this.modalService.success("Import successful");
     } catch (err) {
       console.error(err);
-      alert(
+      await this.modalService.error(
         'Failed to import data: ' +
           (err instanceof Error ? err.message : 'Unknown error')
       );
@@ -306,20 +307,20 @@ Do you want to overwrite these?
     const dbName = 'mindorica-db';
     const req = indexedDB.deleteDatabase(dbName);
 
-    req.onsuccess = () => {
+    req.onsuccess = async () => {
       console.log(`IndexedDB "${dbName}" deleted successfully.`);
-      alert('All data has been deleted.');
+      await this.modalService.success('All data has been deleted.');
       window.location.reload();
     };
 
     req.onerror = () => {
       console.error(`Failed to delete IndexedDB "${dbName}".`);
-      alert('Error deleting database. Some data may remain.');
+      this.modalService.error('Error deleting database. Some data may remain.');
     };
 
     req.onblocked = () => {
       console.warn(`Delete blocked for IndexedDB "${dbName}". Please close other tabs.`);
-      alert('Please close other tabs using the app and try again.');
+      this.modalService.warning('Please close other tabs using the app and try again.');
     };
   }
 
@@ -338,78 +339,6 @@ Do you want to overwrite these?
     }
   }
 
-  onAnkiImportSubmit(event: Event): void {
-      event.preventDefault(); // Prevent form reload
-
-      if (!this.selectedAnkiFile || !this.selectedAnkiTopicId) {
-        alert('Please select both a file and a topic.');
-        return;
-      }
-
-      if (!environment.enableAnkiImport) {
-        alert('Anki import is only available in development mode.');
-        return;
-      }
-
-      this.importAnkiFile(this.selectedAnkiFile, this.selectedAnkiTopicId);
-    }
-
-  async importAnkiFile(file: File, topicId: string): Promise<void> {
-    /*
-    Importing from Anki requires Sqlite which is only available in node builds (via ng serve). For production builds (ng build) there are no node modules so app fails to build.-
-    TODO: Find a way to conditionally load sql.js based on environment. Maybe I need a seperate converter tool?
-    
-    const zip = await JSZip.loadAsync(file);
-    const dbFile = zip.file('collection.anki21') ?? zip.file('collection.anki2');
-
-    if (!dbFile) {
-      alert('Invalid Anki file: no collection.anki21 or .anki2 found.');
-      return;
-    }
-
-    const dbArrayBuffer = await dbFile.async('arraybuffer');
-    const SQL = await initSqlJs({ locateFile: () => 'assets/sql-wasm.wasm' });
-    const db = new SQL.Database(new Uint8Array(dbArrayBuffer));
-
-    const result = db.exec(`SELECT flds FROM notes`);
-    if (!result.length) {
-      alert('No notes found in Anki deck.');
-      return;
-    }
-
-    // Build media map (id -> filename) and reverse it
-    const mediaFile = zip.file('media');
-    const mediaRaw = mediaFile ? await mediaFile.async('string') : '{}';
-    const mediaMap = JSON.parse(mediaRaw) as Record<string, string>;
-
-    // Convert to filename -> index for easy lookup
-    const filenameToIndex: Record<string, string> = {};
-    for (const [index, filename] of Object.entries(mediaMap)) {
-      filenameToIndex[filename] = index;
-    }
-
-    // Load binary media files
-    const mediaFiles: Record<string, Uint8Array> = {};
-    for (const [index, filename] of Object.entries(mediaMap)) {
-      const file = zip.file(index);
-      if (file) {
-        mediaFiles[filename] = new Uint8Array(await file.async('uint8array'));
-      }
-    }
-
-    const rows = result[0].values.map((r: any[]) => r[0] as string);
-    const cards = this.extractNotes(rows, mediaFiles, mediaMap);
-
-    for (const card of cards) {
-      card.topicId = topicId;
-      this.flashcards.push(card);
-    }
-
-    this.flashcardService.saveFlashcardsAndTopics(this.allTopics, this.flashcards);
-    const topic = this.allTopics.find(t => t.id === topicId);
-    this.success(`${cards.length} card(s) imported to topic “${topic?.name}”.`);
-    */
-  }
 
   success(msg: string) {
     this.importMessage = msg;
